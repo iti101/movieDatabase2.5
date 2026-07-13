@@ -1,0 +1,13 @@
+.watchlist-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 6rem 1.5rem 2rem;
+}
+
+.watchlist-page__message {
+    font-size: 1.125rem;
+    color: #6b7280;
+    text-align: center;
+}

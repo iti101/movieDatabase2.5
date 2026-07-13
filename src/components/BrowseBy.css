@@ -16,12 +16,16 @@
   background: #f1f5f9;
   color: #64748b;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .browse-by__trigger:hover {
   background: #e2e8f0;
   color: #475569;
+  transform: scale(1.06);
 }
 
 .browse-by__trigger[aria-expanded='true'] {
@@ -81,11 +85,14 @@
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .browse-by__option:hover {
   background: #f1f5f9;
+  color: #020617;
 }
 
 @media (max-width: 480px) {
@@ -94,5 +101,11 @@
     left: 50%;
     transform: translateX(-50%);
     min-width: min(12rem, calc(100vw - 2rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .browse-by__trigger:hover {
+    transform: none;
   }
 }

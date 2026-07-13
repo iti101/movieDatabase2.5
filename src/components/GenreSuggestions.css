@@ -21,13 +21,18 @@
   font-weight: 500;
   color: #64748b;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
   white-space: nowrap;
+  text-decoration: underline transparent;
+  text-underline-offset: 0.15em;
 }
 
 .genre-suggestions__item:hover,
 .genre-suggestions__all:hover {
   color: #0f172a;
+  text-decoration-color: currentColor;
 }
 
 .genre-suggestions__all {

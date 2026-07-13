@@ -30,11 +30,14 @@
     background: transparent;
     color: #111827;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition:
+            background-color 0.15s ease,
+            transform 0.15s ease;
 }
 
 .navbar__menu-btn:hover {
     background: #f3f4f6;
+    transform: scale(1.04);
 }
 
 .navbar__menu-icon {
@@ -103,11 +106,14 @@
     background: transparent;
     color: #111827;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition:
+            background-color 0.15s ease,
+            transform 0.15s ease;
 }
 
 .navbar__account-btn:hover {
     background: #f3f4f6;
+    transform: scale(1.04);
 }
 
 .navbar__account-backdrop {
@@ -169,11 +175,17 @@
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition:
+            background-color 0.15s ease,
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.08);
 }
 
 .navbar__account-signin:hover {
     background: #1f2937;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.14);
 }
 
 /* Fullscreen menu overlay */
@@ -212,7 +224,11 @@
     color: #111827;
     text-decoration: none;
     padding: 0.75rem 1.5rem;
+    border: none;
     border-radius: 0.5rem;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
     opacity: 0;
     transform: translateY(1rem);
     transition:
@@ -230,6 +246,7 @@
 .navbar__fullscreen-link:hover {
     color: #374151;
     background: #f9fafb;
+    transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
@@ -252,5 +269,14 @@
     .navbar__account-btn {
         width: 2.5rem;
         height: 2.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .navbar__menu-btn:hover,
+    .navbar__account-btn:hover,
+    .navbar__account-signin:hover,
+    .navbar__fullscreen-link:hover {
+        transform: none;
     }
 }

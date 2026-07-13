@@ -4,10 +4,9 @@ import './NavBar.css';
 
 const MENU_LINKS = [
   { label: 'Home', to: '/' },
-  { label: 'Movies', to: '/search' },
-  { label: 'Series', to: '/search' },
-  { label: "Genre's", to: '/search' },
-  { label: 'Log in', to: '/search' },
+  { label: 'Search', to: '/search' },
+  { label: 'Watchlist', to: '/watchlist' },
+  { label: 'Log in/out', action: 'auth' },
 ];
 
 function MenuIcon() {
@@ -56,7 +55,7 @@ function AccountMenu({ onClose, onSignIn }) {
   );
 }
 
-function FullscreenMenu({ isOpen, onLinkClick }) {
+function FullscreenMenu({ isOpen, onLinkClick, onSignIn }) {
   let overlayClass = 'navbar__overlay';
   if (isOpen) {
     overlayClass += ' navbar__overlay--open';
@@ -73,6 +72,23 @@ function FullscreenMenu({ isOpen, onLinkClick }) {
           let delay = '0ms';
           if (isOpen) {
             delay = `${index * 60 + 80}ms`;
+          }
+
+          if (link.action === 'auth') {
+            return (
+              <button
+                key={link.label}
+                type="button"
+                className="navbar__fullscreen-link"
+                style={{ transitionDelay: delay }}
+                onClick={() => {
+                  onSignIn();
+                  onLinkClick();
+                }}
+              >
+                {link.label}
+              </button>
+            );
           }
 
           return (
@@ -179,7 +195,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      <FullscreenMenu isOpen={menuOpen} onLinkClick={closeMenu} />
+      <FullscreenMenu isOpen={menuOpen} onLinkClick={closeMenu} onSignIn={handleSignIn} />
     </>
   );
 }

@@ -3,7 +3,7 @@
   text-align: center;
   width: 100%;
   max-width: 36rem;
-  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 4.75rem;
+  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 3.25rem;
 }
 
 .hero-heading__title {
@@ -69,7 +69,7 @@
 .hero-heading__cta {
   position: absolute;
   left: 50%;
-  top: calc(100% + 2rem);
+  top: calc(100% + 0.75rem);
   opacity: 0;
   filter: blur(14px);
   transform: translateX(-50%) translateY(0.75rem) scale(0.97);
@@ -112,7 +112,7 @@
 
 @media (max-width: 640px) {
   .hero-heading {
-    padding-bottom: 4.25rem;
+    padding-bottom: 3rem;
   }
 
   .hero-heading__title {
@@ -121,7 +121,7 @@
   }
 
   .hero-heading__cta {
-    top: calc(100% + 1.5rem);
+    top: calc(100% + 0.5rem);
     width: calc(100% - 1rem);
     max-width: 18rem;
   }
