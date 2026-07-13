@@ -1,0 +1,244 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: transparent
+}
+
+.navbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Hamburger button */
+.navbar__menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #111827;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.navbar__menu-btn:hover {
+    background: #f3f4f6;
+}
+
+.navbar__menu-icon {
+    position: relative;
+    display: block;
+    width: 1.25rem;
+    height: 1rem;
+}
+
+.navbar__menu-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+    transition:
+            transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.25s ease,
+            top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar__menu-line:nth-child(1) {
+    top: 0;
+}
+
+.navbar__menu-line:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.navbar__menu-line:nth-child(3) {
+    top: 100%;
+    transform: translateY(-100%);
+}
+
+.navbar__menu-btn--open .navbar__menu-line:nth-child(1) {
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.navbar__menu-btn--open .navbar__menu-line:nth-child(2) {
+    opacity: 0;
+    transform: translateY(-50%) scaleX(0);
+}
+
+.navbar__menu-btn--open .navbar__menu-line:nth-child(3) {
+    top: 50%;
+    transform: translateY(-50%) rotate(-45deg);
+}
+
+/* Account profile */
+.navbar__account {
+    position: relative;
+}
+
+.navbar__account-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    color: #111827;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.navbar__account-btn:hover {
+    background: #f3f4f6;
+}
+
+.navbar__account-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    border: none;
+    background: transparent;
+    cursor: default;
+}
+
+.navbar__account-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 110;
+    width: 16rem;
+    padding: 1.25rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    animation: navbar-account-in 0.2s ease;
+}
+
+@keyframes navbar-account-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar__account-heading {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.375rem;
+}
+
+.navbar__account-text {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.navbar__account-signin {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: none;
+    border-radius: 9999px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.navbar__account-signin:hover {
+    background: #1f2937;
+}
+
+/* Fullscreen menu overlay */
+.navbar__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+            opacity 0.4s ease,
+            visibility 0.4s ease;
+}
+
+.navbar__overlay--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.navbar__fullscreen-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar__fullscreen-link {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 600;
+    color: #111827;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    opacity: 0;
+    transform: translateY(1rem);
+    transition:
+            opacity 0.35s ease,
+            transform 0.35s ease,
+            color 0.15s ease,
+            background-color 0.15s ease;
+}
+
+.navbar__overlay--open .navbar__fullscreen-link {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.navbar__fullscreen-link:hover {
+    color: #374151;
+    background: #f9fafb;
+}
+
+@media (max-width: 640px) {
+    .navbar__inner {
+        padding: 1rem 1.25rem;
+    }
+
+    .navbar__account-panel {
+        width: calc(100vw - 2.5rem);
+        right: -0.25rem;
+    }
+}

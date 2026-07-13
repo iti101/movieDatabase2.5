@@ -1,0 +1,55 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.container {
+  height: 100vh;
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+
+.section {
+  height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.section1 {
+  background-color: #ffffff;
+}
+
+.section2 {
+  background-color: grey;
+  font-size: 3em;
+}
+
+.section3 {
+  background-color: lightyellow;
+  font-size: 3em;
+}
+
+.landing-section {
+  padding: 2rem 1.5rem;
+}
+
+.landing-section__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 48rem;
+}
+
+@media (max-width: 640px) {
+  .landing-section__content {
+    gap: 2rem;
+  }
+}

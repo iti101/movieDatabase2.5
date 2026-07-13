@@ -1,0 +1,21 @@
+.search-page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-page__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 48rem;
+}
+
+@media (max-width: 640px) {
+  .search-page__content {
+    gap: 2rem;
+  }
+}

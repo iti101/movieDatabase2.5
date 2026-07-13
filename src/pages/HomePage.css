@@ -1,0 +1,31 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.home-scroll {
+  height: 100vh;
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+
+.home-scroll__section {
+  height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-scroll__section--landing {
+  background: #ffffff;
+}
+
+.home-scroll__section--search {
+  background: #ffffff;
+  padding: 2rem 1.5rem;
+}
