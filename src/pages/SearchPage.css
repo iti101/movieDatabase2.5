@@ -23,11 +23,6 @@
   max-width: 42rem;
 }
 
-.search-page__browse {
-  display: flex;
-  justify-content: flex-end;
-}
-
 @media (max-width: 640px) {
   .search-page__content {
     gap: 2rem;

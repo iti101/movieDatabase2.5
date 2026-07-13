@@ -66,7 +66,7 @@ function BrowseBy({ onSelect }) {
   function handleOptionClick(option) {
     setOpen(false);
     if (onSelect) {
-      onSelect(option.id);
+      onSelect(option);
     }
   }
 
@@ -78,26 +78,29 @@ function BrowseBy({ onSelect }) {
         onClick={toggleMenu}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label="Browse by"
       >
-        Browse by...
         <ChevronIcon open={open} />
       </button>
 
       {open && (
-        <ul className="browse-by__menu" role="menu">
-          {BROWSE_OPTIONS.map((option) => (
-            <li key={option.id} role="none">
-              <button
-                type="button"
-                className="browse-by__option"
-                role="menuitem"
-                onClick={() => handleOptionClick(option)}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="browse-by__menu">
+          <p className="browse-by__label">Browse by...:</p>
+          <ul className="browse-by__options" role="menu">
+            {BROWSE_OPTIONS.map((option) => (
+              <li key={option.id} role="none">
+                <button
+                  type="button"
+                  className="browse-by__option"
+                  role="menuitem"
+                  onClick={() => handleOptionClick(option)}
+                >
+                  {option.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

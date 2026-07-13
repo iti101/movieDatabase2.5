@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BrowseBy from './BrowseBy';
 import PillButton from './PillButton';
 import './SearchBar.css';
 
@@ -19,6 +20,7 @@ function SearchIcon() {
 function SearchBar({
   placeholder = 'Search for a movie...',
   onSearch,
+  onBrowseSelect,
   defaultValue = '',
 }) {
   const [query, setQuery] = useState(defaultValue);
@@ -55,6 +57,8 @@ function SearchBar({
         <PillButton type="submit" className="search-bar__submit">
           Search
         </PillButton>
+
+        {onBrowseSelect && <BrowseBy onSelect={onBrowseSelect} />}
       </div>
     </form>
   );
