@@ -22,3 +22,10 @@
 .pill-button:active {
   background: #0f172a;
 }
+
+@media (max-width: 640px) {
+  .pill-button {
+    padding: 0.6875rem 1.5rem;
+    font-size: 0.875rem;
+  }
+}

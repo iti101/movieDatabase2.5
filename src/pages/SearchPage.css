@@ -1,8 +1,17 @@
 .search-page {
   width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) clamp(1.5rem, 4vh, 2.5rem);
+  box-sizing: border-box;
+}
+
+.search-page--embedded {
+  min-height: 100%;
+  height: 100%;
 }
 
 .search-page__content {
@@ -24,6 +33,12 @@
 }
 
 @media (max-width: 640px) {
+  .search-page {
+    align-items: flex-start;
+    padding-top: 4.25rem;
+    padding-bottom: 1.25rem;
+  }
+
   .search-page__content {
     gap: 2rem;
   }

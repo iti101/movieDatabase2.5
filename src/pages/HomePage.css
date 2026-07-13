@@ -9,12 +9,18 @@ body,
 
 .home-scroll {
   height: 100vh;
+  height: 100dvh;
   scroll-snap-type: y mandatory;
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .home-scroll__section {
   height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   scroll-snap-align: start;
   display: flex;
   justify-content: center;
@@ -23,9 +29,19 @@ body,
 
 .home-scroll__section--landing {
   background: #ffffff;
+  padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) clamp(1.5rem, 4vh, 2.5rem);
 }
 
 .home-scroll__section--search {
   background: #ffffff;
-  padding: 2rem 1.5rem;
+  padding: 0;
+  align-items: stretch;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .home-scroll__section--landing {
+    padding-top: 4.25rem;
+    padding-bottom: 1.25rem;
+  }
 }

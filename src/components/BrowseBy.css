@@ -87,3 +87,12 @@
 .browse-by__option:hover {
   background: #f1f5f9;
 }
+
+@media (max-width: 480px) {
+  .browse-by__menu {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: min(12rem, calc(100vw - 2rem));
+  }
+}

@@ -234,11 +234,23 @@
 
 @media (max-width: 640px) {
     .navbar__inner {
-        padding: 1rem 1.25rem;
+        padding: 1rem clamp(1rem, 4vw, 1.25rem);
     }
 
     .navbar__account-panel {
-        width: calc(100vw - 2.5rem);
-        right: -0.25rem;
+        width: min(16rem, calc(100vw - 2rem));
+        right: 0;
+    }
+
+    .navbar__fullscreen-link {
+        padding: 0.625rem 1.25rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .navbar__menu-btn,
+    .navbar__account-btn {
+        width: 2.5rem;
+        height: 2.5rem;
     }
 }

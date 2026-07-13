@@ -10,7 +10,7 @@ function getBrowsePlaceholder(label) {
   return `Search for ${article} ${term}...`;
 }
 
-export default function SearchPage() {
+export default function SearchPage({ embedded = false }) {
   const [browseOption, setBrowseOption] = useState(null);
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
@@ -51,7 +51,7 @@ export default function SearchPage() {
       : 'Search for a movie...';
 
   return (
-    <div className="search-page">
+    <div className={`search-page${embedded ? ' search-page--embedded' : ''}`}>
       <div className="search-page__content">
         <div className="search-page__search">
           <SearchBar

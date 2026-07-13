@@ -1,6 +1,9 @@
 .hero-heading {
+  position: relative;
   text-align: center;
+  width: 100%;
   max-width: 36rem;
+  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 4.75rem;
 }
 
 .hero-heading__title {
@@ -12,10 +15,120 @@
   color: #0f172a;
 }
 
+.hero-heading__word-slot {
+  display: inline-grid;
+  vertical-align: bottom;
+  overflow: hidden;
+  perspective: 600px;
+}
+
+.hero-heading__word-slot-sizer {
+  visibility: hidden;
+  user-select: none;
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.hero-heading__rotating-word {
+  grid-area: 1 / 1;
+  align-self: end;
+  white-space: nowrap;
+  transform-origin: center bottom;
+}
+
+.hero-heading__rotating-word--enter {
+  animation: hero-heading-word-flip 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes hero-heading-word-flip {
+  from {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-heading__rotating-word--enter {
+    animation: none;
+  }
+}
+
 .hero-heading__subtitle {
   margin: 0;
   font-size: clamp(1rem, 2.2vw, 1.25rem);
   font-weight: 400;
   line-height: 1.6;
   color: #64748b;
+}
+
+.hero-heading__cta {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2rem);
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateX(-50%) translateY(0.75rem) scale(0.97);
+  will-change: opacity, filter, transform;
+  pointer-events: none;
+}
+
+.hero-heading__cta--visible {
+  animation: hero-heading-cta-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes hero-heading-cta-enter {
+  0% {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateX(-50%) translateY(0.75rem) scale(0.97);
+  }
+
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-heading__cta {
+    filter: none;
+    will-change: auto;
+  }
+
+  .hero-heading__cta--visible {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-heading {
+    padding-bottom: 4.25rem;
+  }
+
+  .hero-heading__title {
+    font-size: clamp(1.875rem, 7.5vw, 2.5rem);
+    line-height: 1.2;
+  }
+
+  .hero-heading__cta {
+    top: calc(100% + 1.5rem);
+    width: calc(100% - 1rem);
+    max-width: 18rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-heading__title {
+    font-size: clamp(1.625rem, 8vw, 1.875rem);
+  }
 }
