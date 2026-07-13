@@ -14,6 +14,20 @@
   max-width: 48rem;
 }
 
+.search-page__search {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 42rem;
+}
+
+.search-page__browse {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 640px) {
   .search-page__content {
     gap: 2rem;
