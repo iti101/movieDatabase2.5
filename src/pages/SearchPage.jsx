@@ -1,8 +1,23 @@
 import { useState } from 'react';
 import GenreSuggestions from '../components/GenreSuggestions';
+import PillButton from '../components/PillButton';
 import SearchBar from '../components/SearchBar';
 import { pickRandomGenres } from '../utils/genreSuggestions';
 import './SearchPage.css';
+
+function ChevronDownIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function getBrowsePlaceholder(label) {
   const term = label.toLowerCase();
@@ -44,6 +59,10 @@ export default function SearchPage({ embedded = false }) {
     console.log('All genres');
   }
 
+  function handleHelp() {
+    handleBrowse({ id: 'genre', label: 'Genre' });
+  }
+
   const placeholder = selectedGenre
     ? getBrowsePlaceholder(selectedGenre)
     : browseOption
@@ -54,18 +73,38 @@ export default function SearchPage({ embedded = false }) {
     <div className={`search-page${embedded ? ' search-page--embedded' : ''}`}>
       <div className="search-page__content">
         <div className="search-page__search">
-          <SearchBar
-            onSearch={handleSearch}
-            onBrowseSelect={handleBrowse}
-            placeholder={placeholder}
-          />
-          {browseOption?.id === 'genre' && (
-            <GenreSuggestions
-              suggestions={genreSuggestions}
-              onSelect={handleGenreSelect}
-              onAllGenres={handleAllGenres}
+          <div className="search-page__search-field">
+            <SearchBar
+              onSearch={handleSearch}
+              onBrowseSelect={handleBrowse}
+              placeholder={placeholder}
             />
-          )}
+            {browseOption?.id === 'genre' && (
+              <GenreSuggestions
+                suggestions={genreSuggestions}
+                onSelect={handleGenreSelect}
+                onAllGenres={handleAllGenres}
+              />
+            )}
+          </div>
+          <div className="search-page__help">
+            <p className="search-page__help-text">
+              Can&apos;t seem to find anything interesting?
+            </p>
+            <div className="search-page__help-action">
+              <PillButton type="button" onClick={handleHelp}>
+                Let us help
+              </PillButton>
+              <button
+                type="button"
+                className="search-page__help-arrow"
+                onClick={handleHelp}
+                aria-label="Let us help"
+              >
+                <ChevronDownIcon />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

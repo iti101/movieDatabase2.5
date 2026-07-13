@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './NavBar.css';
 
 const MENU_LINKS = [
   { label: 'Home', to: '/' },
   { label: 'Search', to: '/search' },
-  { label: 'Watchlist', to: '/watchlist' },
+  { label: 'My watchlist', to: '/watchlist' },
   { label: 'Log in/out', action: 'auth' },
 ];
 
@@ -33,7 +34,7 @@ function AccountIcon() {
   );
 }
 
-function AccountMenu({ onClose, onSignIn }) {
+function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
   return (
     <>
       <button
@@ -44,18 +45,29 @@ function AccountMenu({ onClose, onSignIn }) {
       />
       <div className="navbar__account-panel" role="dialog" aria-label="Account">
         <p className="navbar__account-heading">Your account</p>
-        <p className="navbar__account-text">
-          Sign in to access your watchlist and preferences.
-        </p>
-        <button type="button" className="navbar__account-signin" onClick={onSignIn}>
-          Sign in
-        </button>
+        {isLoggedIn ? (
+          <>
+            <p className="navbar__account-text">You are signed in.</p>
+            <button type="button" className="navbar__account-signin" onClick={onSignOut}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="navbar__account-text">
+              Sign in to access your watchlist and preferences.
+            </p>
+            <button type="button" className="navbar__account-signin" onClick={onSignIn}>
+              Sign in
+            </button>
+          </>
+        )}
       </div>
     </>
   );
 }
 
-function FullscreenMenu({ isOpen, onLinkClick, onSignIn }) {
+function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, authLabel }) {
   let overlayClass = 'navbar__overlay';
   if (isOpen) {
     overlayClass += ' navbar__overlay--open';
@@ -82,11 +94,11 @@ function FullscreenMenu({ isOpen, onLinkClick, onSignIn }) {
                 className="navbar__fullscreen-link"
                 style={{ transitionDelay: delay }}
                 onClick={() => {
-                  onSignIn();
+                  onAuthClick();
                   onLinkClick();
                 }}
               >
-                {link.label}
+                {authLabel}
               </button>
             );
           }
@@ -109,8 +121,11 @@ function FullscreenMenu({ isOpen, onLinkClick, onSignIn }) {
 }
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const authLabel = isLoggedIn ? 'Log out' : 'Log in';
 
   // Stop the page from scrolling while the fullscreen menu is open
   useEffect(() => {
@@ -152,8 +167,22 @@ export default function Navbar() {
   }
 
   function handleSignIn() {
-    alert('Sign in to your personal account — coming soon.');
     setAccountOpen(false);
+    navigate('/login');
+  }
+
+  function handleSignOut() {
+    logout();
+    setAccountOpen(false);
+    navigate('/');
+  }
+
+  function handleAuthClick() {
+    if (isLoggedIn) {
+      handleSignOut();
+    } else {
+      handleSignIn();
+    }
   }
 
   let menuButtonClass = 'navbar__menu-btn';
@@ -189,13 +218,23 @@ export default function Navbar() {
             </button>
 
             {accountOpen && (
-              <AccountMenu onClose={closeAccount} onSignIn={handleSignIn} />
+              <AccountMenu
+                onClose={closeAccount}
+                onSignIn={handleSignIn}
+                onSignOut={handleSignOut}
+                isLoggedIn={isLoggedIn}
+              />
             )}
           </div>
         </div>
       </header>
 
-      <FullscreenMenu isOpen={menuOpen} onLinkClick={closeMenu} onSignIn={handleSignIn} />
+      <FullscreenMenu
+        isOpen={menuOpen}
+        onLinkClick={closeMenu}
+        onAuthClick={handleAuthClick}
+        authLabel={authLabel}
+      />
     </>
   );
 }
