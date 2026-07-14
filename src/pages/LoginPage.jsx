@@ -15,9 +15,32 @@ export default function LoginPage() {
     navigate(redirect, { replace: true });
   }
 
+  function handleClose() {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  }
+
   return (
     <div className="login-page">
       <div className="login-page__card">
+        <button
+          type="button"
+          className="login-page__close"
+          aria-label="Close sign in"
+          onClick={handleClose}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
         <h1 className="login-page__heading">Sign in</h1>
         <p className="login-page__text">
           Sign in to access your watchlist and preferences.
