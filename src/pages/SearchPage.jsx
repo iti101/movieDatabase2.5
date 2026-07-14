@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GenreSuggestions from '../components/GenreSuggestions';
 import PillButton from '../components/PillButton';
 import SearchBar from '../components/SearchBar';
@@ -25,7 +26,8 @@ function getBrowsePlaceholder(label) {
   return `Search for ${article} ${term}...`;
 }
 
-export default function SearchPage({ embedded = false }) {
+export default function SearchPage({ embedded = false, onLetUsHelp }) {
+  const navigate = useNavigate();
   const [browseOption, setBrowseOption] = useState(null);
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
@@ -60,7 +62,12 @@ export default function SearchPage({ embedded = false }) {
   }
 
   function handleHelp() {
-    handleBrowse({ id: 'genre', label: 'Genre' });
+    if (onLetUsHelp) {
+      onLetUsHelp();
+      return;
+    }
+
+    navigate('/suggest');
   }
 
   const placeholder = selectedGenre

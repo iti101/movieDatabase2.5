@@ -1,6 +1,7 @@
 import './App.css';
 import LandingPage from './pages/LandingPage';
 import SearchPage from './pages/SearchPage';
+import SuggestPage from './pages/SuggestPage';
 import Navbar from './components/NavBar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/suggest" element={<SuggestPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/watchlist"
