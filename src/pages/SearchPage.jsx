@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GenreSuggestions from '../components/GenreSuggestions';
 import PillButton from '../components/PillButton';
 import SearchBar from '../components/SearchBar';
+import SearchResults from '../components/SearchResults';
+import { searchMovies, searchTv } from '../services/tmdb';
 import { pickRandomGenres } from '../utils/genreSuggestions';
 import './SearchPage.css';
 
@@ -26,16 +28,79 @@ function getBrowsePlaceholder(label) {
   return `Search for ${article} ${term}...`;
 }
 
+async function fetchResults(query, tab) {
+  if (tab === 'tv') {
+    return searchTv(query);
+  }
+  return searchMovies(query);
+}
+
 export default function SearchPage({ embedded = false, onLetUsHelp }) {
   const navigate = useNavigate();
   const [browseOption, setBrowseOption] = useState(null);
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
+  const [activeQuery, setActiveQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('movie');
+  const [results, setResults] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const isActive = Boolean(activeQuery);
+
+  useEffect(() => {
+    if (!activeQuery) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function load() {
+      setStatus('loading');
+      setErrorMessage('');
+      setResults([]);
+
+      try {
+        const data = await fetchResults(activeQuery, activeTab);
+        if (!cancelled) {
+          setResults(data);
+          setStatus('success');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setResults([]);
+          setStatus('error');
+          setErrorMessage(
+            error instanceof Error ? error.message : 'Something went wrong. Please try again.',
+          );
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeQuery, activeTab]);
 
   function handleSearch(query) {
-    if (query) {
-      console.log('Search:', query);
+    if (!query) {
+      setActiveQuery('');
+      setResults([]);
+      setStatus('idle');
+      setErrorMessage('');
+      return;
     }
+
+    setActiveQuery(query);
+  }
+
+  function handleTabChange(tab) {
+    if (tab === activeTab) {
+      return;
+    }
+    setActiveTab(tab);
   }
 
   function handleBrowse(option) {
@@ -47,18 +112,14 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     } else {
       setGenreSuggestions([]);
     }
-
-    console.log('Browse by:', option.id);
   }
 
   function handleGenreSelect(genre) {
     setSelectedGenre(genre);
-    console.log('Genre selected:', genre);
   }
 
   function handleAllGenres() {
     setSelectedGenre(null);
-    console.log('All genres');
   }
 
   function handleHelp() {
@@ -76,41 +137,65 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
       ? getBrowsePlaceholder(browseOption.label)
       : 'Search for a movie...';
 
+  const pageClassName = [
+    'search-page',
+    embedded ? 'search-page--embedded' : '',
+    isActive ? 'search-page--active' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={`search-page${embedded ? ' search-page--embedded' : ''}`}>
+    <div className={pageClassName}>
       <div className="search-page__content">
-        <div className="search-page__search">
+        <div className="search-page__top">
           <div className="search-page__search-field">
             <SearchBar
               onSearch={handleSearch}
               onBrowseSelect={handleBrowse}
               placeholder={placeholder}
             />
-            {browseOption?.id === 'genre' && (
-              <GenreSuggestions
-                suggestions={genreSuggestions}
-                onSelect={handleGenreSelect}
-                onAllGenres={handleAllGenres}
-              />
-            )}
-          </div>
-          <div className="search-page__help">
-            <p className="search-page__help-text">
-              Can&apos;t seem to find anything interesting?
-            </p>
-            <div className="search-page__help-action">
-              <PillButton type="button" onClick={handleHelp}>
-                Let us help
-              </PillButton>
-              <button
-                type="button"
-                className="search-page__help-arrow"
-                onClick={handleHelp}
-                aria-label="Let us help"
-              >
-                <ChevronDownIcon />
-              </button>
+            <div className="search-page__genre-slot">
+              {browseOption?.id === 'genre' ? (
+                <GenreSuggestions
+                  suggestions={genreSuggestions}
+                  onSelect={handleGenreSelect}
+                  onAllGenres={handleAllGenres}
+                />
+              ) : null}
             </div>
+          </div>
+        </div>
+
+        <div className="search-page__results">
+          {isActive ? (
+            <SearchResults
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              results={results}
+              status={status}
+              query={activeQuery}
+              errorMessage={errorMessage}
+            />
+          ) : null}
+        </div>
+
+        <div className="search-page__help">
+          <p className="search-page__help-text">
+            Can&apos;t seem to find anything interesting?
+          </p>
+          <div className="search-page__help-action">
+            <PillButton type="button" onClick={handleHelp}>
+              Let us help
+            </PillButton>
+            <button
+              type="button"
+              className="search-page__help-arrow"
+              onClick={handleHelp}
+              aria-label="Let us help"
+            >
+              <ChevronDownIcon />
+            </button>
           </div>
         </div>
       </div>

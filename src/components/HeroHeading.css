@@ -3,58 +3,60 @@
   text-align: center;
   width: 100%;
   max-width: 36rem;
-  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 3.25rem;
+  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 4.5rem;
 }
 
 .hero-heading__title {
+  position: relative;
+  z-index: 2;
   margin: 0 0 1rem;
+  padding-bottom: 0.35rem;
   font-size: clamp(2.25rem, 5vw, 3.25rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #0f172a;
+  background: #ffffff;
 }
 
 .hero-heading__word-slot {
-  display: inline-grid;
-  vertical-align: bottom;
-  overflow: hidden;
-  perspective: 600px;
+  display: inline;
+  white-space: nowrap;
 }
 
-.hero-heading__word-slot-sizer {
+.hero-heading__typed-word {
+  display: inline;
+}
+
+.hero-heading__cursor {
+  display: inline-block;
+  width: 0.07em;
+  height: 0.85em;
+  margin-left: 0.02em;
+  vertical-align: -0.06em;
+  background: currentColor;
+  animation: hero-heading-cursor-blink 0.95s step-end infinite;
+}
+
+.hero-heading__cursor--hidden {
   visibility: hidden;
-  user-select: none;
-  grid-area: 1 / 1;
-  white-space: nowrap;
+  animation: none;
 }
 
-.hero-heading__rotating-word {
-  grid-area: 1 / 1;
-  align-self: end;
-  white-space: nowrap;
-  transform-origin: center bottom;
-}
-
-.hero-heading__rotating-word--enter {
-  animation: hero-heading-word-flip 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-@keyframes hero-heading-word-flip {
-  from {
-    transform: rotateX(90deg);
-    opacity: 0;
+@keyframes hero-heading-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
   }
 
-  to {
-    transform: rotateX(0deg);
-    opacity: 1;
+  50% {
+    opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-heading__rotating-word--enter {
-    animation: none;
+  .hero-heading__cursor {
+    display: none;
   }
 }
 
@@ -66,10 +68,82 @@
   color: #64748b;
 }
 
+.hero-heading__attribution-slot {
+  position: relative;
+  width: 100%;
+  height: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.hero-heading__attribution-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2.75rem;
+  height: 4rem;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-heading__attribution {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  opacity: 0;
+  transform: translateY(calc(-100% - 2rem));
+  will-change: opacity, transform;
+}
+
+.hero-heading__attribution--visible {
+  animation: hero-heading-attribution-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+.hero-heading__attribution-brand {
+  color: #01b4e4;
+  font-weight: 700;
+}
+
+@keyframes hero-heading-attribution-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-100% - 2rem));
+  }
+
+  18% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-heading__attribution--visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .hero-heading__cta {
   position: absolute;
   left: 50%;
   top: calc(100% + 0.75rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   opacity: 0;
   filter: blur(14px);
   transform: translateX(-50%) translateY(0.75rem) scale(0.97);
@@ -96,6 +170,32 @@
   }
 }
 
+.hero-heading__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  opacity: 0;
+  transform: translateY(-0.35rem);
+  will-change: opacity, transform;
+}
+
+.hero-heading__arrow--visible {
+  animation: hero-heading-arrow-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes hero-heading-arrow-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-heading__cta {
     filter: none;
@@ -108,11 +208,17 @@
     filter: none;
     transform: translateX(-50%);
   }
+
+  .hero-heading__arrow--visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 640px) {
   .hero-heading {
-    padding-bottom: 3rem;
+    padding-bottom: 4rem;
   }
 
   .hero-heading__title {
