@@ -1,0 +1,220 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { getTvDetails } from '../services/tmdb';
+import './MovieDetailPage.css';
+
+function formatRating(rating) {
+  if (rating == null || Number.isNaN(rating)) {
+    return 'N/A';
+  }
+  return rating.toFixed(1);
+}
+
+export default function TvDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [show, setShow] = useState(null);
+  const [status, setStatus] = useState('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  function handleCastClick(member) {
+    navigate(
+      { pathname: '/', hash: '#search' },
+      {
+        state: {
+          scrollTo: 'search',
+          resetSearch: Date.now(),
+          actorSearch: {
+            id: member.id,
+            name: member.name,
+          },
+        },
+      },
+    );
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadShow() {
+      setStatus('loading');
+      setErrorMessage('');
+      setShow(null);
+
+      try {
+        const details = await getTvDetails(id);
+        if (!cancelled) {
+          setShow(details);
+          setStatus('success');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setStatus('error');
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong. Please try again.',
+          );
+        }
+      }
+    }
+
+    loadShow();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const displayTitle = show
+    ? show.year
+      ? `${show.title} (${show.year})`
+      : show.title
+    : '';
+
+  return (
+    <main className="movie-detail">
+      <div className="movie-detail__inner">
+        <Link
+          className="movie-detail__back"
+          to={{ pathname: '/', hash: '#suggest' }}
+          state={{ scrollTo: 'suggest' }}
+        >
+          ← Back
+        </Link>
+
+        {status === 'loading' ? (
+          <p className="movie-detail__message" aria-live="polite">
+            Loading TV show details…
+          </p>
+        ) : null}
+
+        {status === 'error' ? (
+          <p
+            className="movie-detail__message movie-detail__message--error"
+            role="alert"
+          >
+            {errorMessage || 'Could not load this TV show.'}
+          </p>
+        ) : null}
+
+        {status === 'success' && show ? (
+          <article className="movie-detail__content">
+            <div className="movie-detail__hero">
+              <div className="movie-detail__poster-wrap">
+                <img
+                  className="movie-detail__poster"
+                  src={show.posterUrl}
+                  alt={displayTitle}
+                />
+              </div>
+
+              <div className="movie-detail__header">
+                <h1 className="movie-detail__title">{show.title}</h1>
+
+                <dl className="movie-detail__meta">
+                  {show.year ? (
+                    <div className="movie-detail__meta-item">
+                      <dt>First aired</dt>
+                      <dd>{show.year}</dd>
+                    </div>
+                  ) : null}
+
+                  {show.genres.length > 0 ? (
+                    <div className="movie-detail__meta-item">
+                      <dt>Genre</dt>
+                      <dd>{show.genres.join(', ')}</dd>
+                    </div>
+                  ) : null}
+
+                  <div className="movie-detail__meta-item">
+                    <dt>User rating</dt>
+                    <dd>
+                      <span className="movie-detail__rating">
+                        {formatRating(show.rating)}
+                      </span>
+                      <span className="movie-detail__rating-scale"> / 10</span>
+                      {show.voteCount > 0 ? (
+                        <span className="movie-detail__vote-count">
+                          ({show.voteCount.toLocaleString()} votes)
+                        </span>
+                      ) : null}
+                    </dd>
+                  </div>
+
+                  {show.creators ? (
+                    <div className="movie-detail__meta-item">
+                      <dt>Created by</dt>
+                      <dd>{show.creators}</dd>
+                    </div>
+                  ) : null}
+
+                  {show.trailerUrl ? (
+                    <div className="movie-detail__meta-item">
+                      <dt>Trailer</dt>
+                      <dd>
+                        <a
+                          className="movie-detail__trailer-link"
+                          href={show.trailerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Watch on YouTube
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </div>
+            </div>
+
+            <section className="movie-detail__section" aria-labelledby="synopsis-heading">
+              <h2 id="synopsis-heading" className="movie-detail__section-title">
+                Storyline
+              </h2>
+              <p className="movie-detail__synopsis">
+                {show.overview || 'No synopsis available for this show.'}
+              </p>
+            </section>
+
+            <section className="movie-detail__section" aria-labelledby="cast-heading">
+              <h2 id="cast-heading" className="movie-detail__section-title">
+                Cast
+              </h2>
+              {show.cast.length > 0 ? (
+                <ul className="movie-detail__cast">
+                  {show.cast.map((member) => (
+                    <li key={member.id}>
+                      <button
+                        type="button"
+                        className="movie-detail__cast-member"
+                        onClick={() => handleCastClick(member)}
+                        aria-label={`See titles with ${member.name}`}
+                      >
+                        <div className="movie-detail__cast-photo-wrap">
+                          <img
+                            className="movie-detail__cast-photo"
+                            src={member.profileUrl}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                        <p className="movie-detail__cast-name">{member.name}</p>
+                        {member.character ? (
+                          <p className="movie-detail__cast-role">{member.character}</p>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="movie-detail__empty">Cast information is unavailable.</p>
+              )}
+            </section>
+          </article>
+        ) : null}
+      </div>
+    </main>
+  );
+}

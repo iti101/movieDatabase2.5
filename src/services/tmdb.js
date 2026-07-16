@@ -12,7 +12,7 @@ const POSTER_PLACEHOLDER =
     '</svg>',
   );
 
-/** Maps local genre labels to TMDB genre IDs. */
+/** Maps local genre labels to TMDB movie genre IDs. */
 export const GENRE_NAME_TO_ID = {
   Action: 28,
   Adventure: 12,
@@ -33,6 +33,28 @@ export const GENRE_NAME_TO_ID = {
   War: 10752,
   Western: 37,
 };
+
+/**
+ * Maps local genre labels to TMDB TV genre IDs.
+ * Labels with no TV equivalent are omitted (null when resolved).
+ */
+export const TV_GENRE_NAME_TO_ID = {
+  Action: 10759,
+  Adventure: 10759,
+  Animation: 16,
+  Comedy: 35,
+  Crime: 80,
+  Documentary: 99,
+  Drama: 18,
+  Family: 10751,
+  Fantasy: 10765,
+  Mystery: 9648,
+  'Sci-Fi': 10765,
+  War: 10768,
+  Western: 37,
+};
+
+const TMDB_MAX_PAGE = 500;
 
 function getApiKey() {
   const key = import.meta.env.VITE_TMDB_API_KEY;
@@ -143,13 +165,47 @@ export async function searchPeople(query) {
 }
 
 export async function discoverMovies(filters = {}) {
+  const { results } = await discoverMoviesPage(filters, 1);
+  return results;
+}
+
+/**
+ * Page-aware movie discover. Returns normalized results and capped totalPages.
+ */
+export async function discoverMoviesPage(filters = {}, page = 1) {
   const data = await tmdbFetch('/discover/movie', {
     include_adult: false,
     sort_by: 'popularity.desc',
-    page: 1,
+    page,
     ...filters,
   });
-  return (data.results ?? []).map(normalizeMovie);
+
+  return {
+    results: (data.results ?? []).map(normalizeMovie),
+    totalPages: Math.min(data.total_pages ?? 0, TMDB_MAX_PAGE),
+  };
+}
+
+export async function discoverTv(filters = {}) {
+  const { results } = await discoverTvPage(filters, 1);
+  return results;
+}
+
+/**
+ * Page-aware TV discover. Returns normalized results and capped totalPages.
+ */
+export async function discoverTvPage(filters = {}, page = 1) {
+  const data = await tmdbFetch('/discover/tv', {
+    include_adult: false,
+    sort_by: 'popularity.desc',
+    page,
+    ...filters,
+  });
+
+  return {
+    results: (data.results ?? []).map(normalizeTv),
+    totalPages: Math.min(data.total_pages ?? 0, TMDB_MAX_PAGE),
+  };
 }
 
 function getTrailerUrl(videos) {
@@ -216,22 +272,97 @@ export async function getMovieDetails(movieId) {
   return normalizeMovieDetails(data);
 }
 
-export function resolveGenreId(genreName) {
+function normalizeTvDetails(data) {
+  const creators = (data.created_by ?? []).map((person) => person.name);
+
+  const cast = (data.credits?.cast ?? []).slice(0, 12).map((member) => ({
+    id: member.id,
+    name: member.name,
+    character: member.character || '',
+    profileUrl: getProfileUrl(member.profile_path),
+  }));
+
+  return {
+    id: data.id,
+    title: data.name,
+    year: getReleaseYear(data.first_air_date),
+    posterUrl: getPosterUrl(data.poster_path, DETAIL_POSTER_SIZE),
+    overview: data.overview?.trim() || '',
+    genres: (data.genres ?? []).map((genre) => genre.name),
+    rating: typeof data.vote_average === 'number' ? data.vote_average : null,
+    voteCount: data.vote_count ?? 0,
+    creators: creators.length > 0 ? creators.join(', ') : '',
+    cast,
+    trailerUrl: getTrailerUrl(data.videos),
+    mediaType: 'tv',
+  };
+}
+
+/**
+ * Fetches full TV details including credits (cast) and videos.
+ */
+export async function getTvDetails(tvId) {
+  if (!tvId) {
+    throw new Error('TV id is required.');
+  }
+
+  const data = await tmdbFetch(`/tv/${tvId}`, {
+    append_to_response: 'credits,videos',
+  });
+
+  return normalizeTvDetails(data);
+}
+
+function genreMapForMediaType(mediaType) {
+  return mediaType === 'tv' ? TV_GENRE_NAME_TO_ID : GENRE_NAME_TO_ID;
+}
+
+export function resolveGenreId(genreName, mediaType = 'movie') {
   if (!genreName) {
     return null;
   }
 
-  const exact = GENRE_NAME_TO_ID[genreName];
+  const map = genreMapForMediaType(mediaType);
+  const exact = map[genreName];
   if (exact) {
     return exact;
   }
 
   const normalized = genreName.trim().toLowerCase();
-  const entry = Object.entries(GENRE_NAME_TO_ID).find(
+  const entry = Object.entries(map).find(
     ([name]) => name.toLowerCase() === normalized,
   );
 
   return entry ? entry[1] : null;
+}
+
+/**
+ * Resolves genre label list to TMDB IDs for the given media type.
+ * Labels without an ID for that type are skipped.
+ */
+export function resolveGenreIds(genreNames, mediaType = 'movie') {
+  if (!Array.isArray(genreNames) || genreNames.length === 0) {
+    return [];
+  }
+
+  const ids = [];
+  const seen = new Set();
+
+  genreNames.forEach((name) => {
+    const id = resolveGenreId(name, mediaType);
+    if (id != null && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  });
+
+  return ids;
+}
+
+/** Genre labels that have a TMDB ID for the given media type. */
+export function getGenreLabelsForMediaType(mediaType) {
+  const map = genreMapForMediaType(mediaType);
+  return Object.keys(map);
 }
 
 async function findBestPerson(query, { department } = {}) {

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import WatchlistPage from './pages/WatchlistPage';
 import MovieDetailPage from './pages/MovieDetailPage';
+import TvDetailPage from './pages/TvDetailPage';
 
 function AppRoutes() {
   return (
@@ -34,6 +35,7 @@ function AppRoutes() {
         }
       />
       <Route path="/movie/:id" element={<MovieDetailPage />} />
+      <Route path="/tv/:id" element={<TvDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
         path="/watchlist"
