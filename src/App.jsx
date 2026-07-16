@@ -6,6 +6,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import WatchlistPage from './pages/WatchlistPage';
+import MovieDetailPage from './pages/MovieDetailPage';
 
 function AppRoutes() {
   return (
@@ -32,6 +33,7 @@ function AppRoutes() {
           />
         }
       />
+      <Route path="/movie/:id" element={<MovieDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
         path="/watchlist"

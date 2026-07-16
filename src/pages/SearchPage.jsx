@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DidYouMean from '../components/DidYouMean';
 import GenreSuggestions from '../components/GenreSuggestions';
 import PillButton from '../components/PillButton';
@@ -9,6 +9,19 @@ import { searchByBrowseMode } from '../services/tmdb';
 import { getAllGenres, MOVIE_GENRES, pickRandomGenres } from '../utils/genreSuggestions';
 import { findSearchSuggestion } from '../utils/searchSuggestion';
 import './SearchPage.css';
+
+const ACTOR_BROWSE_OPTION = { id: 'actor', label: 'Actor/Actress' };
+
+function getInitialActorSearch(location) {
+  const actor = location.state?.actorSearch;
+  if (!actor?.name) {
+    return null;
+  }
+  return {
+    id: actor.id ?? null,
+    name: String(actor.name).trim(),
+  };
+}
 
 function ChevronDownIcon() {
   return (
@@ -51,11 +64,17 @@ function getSearchContextLabel(browseOption) {
 
 export default function SearchPage({ embedded = false, onLetUsHelp }) {
   const navigate = useNavigate();
-  const [browseOption, setBrowseOption] = useState(null);
+  const location = useLocation();
+  const initialActor = getInitialActorSearch(location);
+
+  const [browseOption, setBrowseOption] = useState(
+    initialActor ? ACTOR_BROWSE_OPTION : null,
+  );
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
-  const [inputValue, setInputValue] = useState('');
-  const [activeQuery, setActiveQuery] = useState('');
+  const [inputValue, setInputValue] = useState(initialActor?.name ?? '');
+  const [activeQuery, setActiveQuery] = useState(initialActor?.name ?? '');
+  const [personId, setPersonId] = useState(initialActor?.id ?? null);
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -84,6 +103,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
       try {
         const data = await searchByBrowseMode(activeQuery || selectedGenre, browseOption, {
           selectedGenre,
+          personId: browseMode === 'actor' ? personId : null,
         });
 
         if (cancelled) {
@@ -119,10 +139,11 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     return () => {
       cancelled = true;
     };
-  }, [activeQuery, browseOption, browseMode, selectedGenre]);
+  }, [activeQuery, browseOption, browseMode, selectedGenre, personId]);
 
   function handleSearch(query) {
     setGenreSuggestions([]);
+    setPersonId(null);
 
     if (!query) {
       setInputValue('');
@@ -144,6 +165,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
   }
 
   function handleSuggestionSelect(nextQuery) {
+    setPersonId(null);
     setInputValue(nextQuery);
     setActiveQuery(nextQuery);
     setSuggestion(null);
@@ -154,6 +176,8 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
   }
 
   function handleBrowse(option) {
+    setPersonId(null);
+
     if (!option) {
       setBrowseOption(null);
       setSelectedGenre(null);

@@ -3,6 +3,19 @@
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 0.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.search-result-card:hover {
+  opacity: 0.88;
+}
+
+.search-result-card:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 3px;
 }
 
 .search-result-card__poster-wrap {

@@ -27,6 +27,12 @@ export default function HomePage() {
     const hash = location.hash.replace('#', '');
     const scrollState = location.state?.scrollTo;
 
+    // No hash/state → stay at the landing section (e.g. after a reload reset).
+    if (!hash && !scrollState) {
+      window.scrollTo(0, 0);
+      return undefined;
+    }
+
     let target = null;
     if (hash === SECTION_IDS.search || scrollState === SECTION_IDS.search) {
       target = searchSectionRef.current;

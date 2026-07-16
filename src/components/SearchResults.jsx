@@ -39,6 +39,7 @@ export default function SearchResults({
             {results.map((item) => (
               <li key={`${item.mediaType}-${item.id}`}>
                 <SearchResultCard
+                  id={item.id}
                   title={item.title}
                   year={item.year}
                   posterUrl={item.posterUrl}

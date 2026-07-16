@@ -1,5 +1,6 @@
 const API_BASE = 'https://api.themoviedb.org/3';
 const POSTER_SIZE = 'w342';
+const DETAIL_POSTER_SIZE = 'w500';
 const PROFILE_SIZE = 'w185';
 
 const POSTER_PLACEHOLDER =
@@ -43,11 +44,11 @@ function getApiKey() {
   return key;
 }
 
-export function getPosterUrl(path) {
+export function getPosterUrl(path, size = POSTER_SIZE) {
   if (!path) {
     return POSTER_PLACEHOLDER;
   }
-  return `https://image.tmdb.org/t/p/${POSTER_SIZE}${path}`;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
 function getProfileUrl(path) {
@@ -151,6 +152,70 @@ export async function discoverMovies(filters = {}) {
   return (data.results ?? []).map(normalizeMovie);
 }
 
+function getTrailerUrl(videos) {
+  const results = videos?.results ?? [];
+  if (results.length === 0) {
+    return null;
+  }
+
+  const youtubeVideos = results.filter(
+    (video) => video.site === 'YouTube' && video.key,
+  );
+
+  const trailer =
+    youtubeVideos.find(
+      (video) => video.type === 'Trailer' && video.official,
+    ) ??
+    youtubeVideos.find((video) => video.type === 'Trailer') ??
+    youtubeVideos.find((video) => video.type === 'Teaser') ??
+    youtubeVideos[0];
+
+  return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
+}
+
+function normalizeMovieDetails(data) {
+  const crew = data.credits?.crew ?? [];
+  const directors = crew
+    .filter((member) => member.job === 'Director')
+    .map((member) => member.name);
+
+  const cast = (data.credits?.cast ?? []).slice(0, 12).map((member) => ({
+    id: member.id,
+    name: member.name,
+    character: member.character || '',
+    profileUrl: getProfileUrl(member.profile_path),
+  }));
+
+  return {
+    id: data.id,
+    title: data.title,
+    year: getReleaseYear(data.release_date),
+    posterUrl: getPosterUrl(data.poster_path, DETAIL_POSTER_SIZE),
+    overview: data.overview?.trim() || '',
+    genres: (data.genres ?? []).map((genre) => genre.name),
+    rating: typeof data.vote_average === 'number' ? data.vote_average : null,
+    voteCount: data.vote_count ?? 0,
+    director: directors.length > 0 ? directors.join(', ') : '',
+    cast,
+    trailerUrl: getTrailerUrl(data.videos),
+  };
+}
+
+/**
+ * Fetches full movie details including credits (cast + crew) and videos.
+ */
+export async function getMovieDetails(movieId) {
+  if (!movieId) {
+    throw new Error('Movie id is required.');
+  }
+
+  const data = await tmdbFetch(`/movie/${movieId}`, {
+    append_to_response: 'credits,videos',
+  });
+
+  return normalizeMovieDetails(data);
+}
+
 export function resolveGenreId(genreName) {
   if (!genreName) {
     return null;
@@ -200,7 +265,11 @@ async function getPersonMovieCredits(personId) {
  * - director: person name → movies directed by that person
  * - release-date: year / year range → movies from that period
  */
-export async function searchByBrowseMode(query, browseOption, { selectedGenre } = {}) {
+export async function searchByBrowseMode(
+  query,
+  browseOption,
+  { selectedGenre, personId } = {},
+) {
   const mode = browseOption?.id ?? null;
   const trimmed = query.trim();
 
@@ -215,11 +284,16 @@ export async function searchByBrowseMode(query, browseOption, { selectedGenre } 
     return discoverMovies({ with_genres: genreId });
   }
 
+  if (mode === 'actor' && personId) {
+    return discoverMovies({ with_cast: personId });
+  }
+
   if (!trimmed) {
     return [];
   }
 
   if (mode === 'actor') {
+
     const person = await findBestPerson(trimmed, { department: 'Acting' });
     if (!person) {
       return [];

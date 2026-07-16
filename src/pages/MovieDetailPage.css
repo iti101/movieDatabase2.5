@@ -1,0 +1,232 @@
+.movie-detail {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) 3rem;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.movie-detail__inner {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.movie-detail__back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.movie-detail__back:hover {
+  color: #0f172a;
+}
+
+.movie-detail__back:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.movie-detail__message {
+  margin: 2rem 0 0;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.movie-detail__message--error {
+  color: #b91c1c;
+}
+
+.movie-detail__hero {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.movie-detail__poster-wrap {
+  width: min(100%, 16rem);
+  aspect-ratio: 2 / 3;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.movie-detail__poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movie-detail__title {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.movie-detail__meta {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+}
+
+.movie-detail__meta-item {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.movie-detail__meta-item dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.movie-detail__meta-item dd {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.movie-detail__rating {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.movie-detail__rating-scale {
+  color: #64748b;
+}
+
+.movie-detail__vote-count {
+  margin-left: 0.35rem;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.movie-detail__trailer-link {
+  color: #0f172a;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color 0.15s ease;
+}
+
+.movie-detail__trailer-link:hover {
+  color: #334155;
+}
+
+.movie-detail__trailer-link:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.movie-detail__section {
+  margin-bottom: 2.25rem;
+}
+
+.movie-detail__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.movie-detail__synopsis {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.movie-detail__empty {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+}
+
+.movie-detail__cast {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.movie-detail__cast-member {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.movie-detail__cast-member:hover {
+  opacity: 0.85;
+}
+
+.movie-detail__cast-member:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 3px;
+}
+
+.movie-detail__cast-photo-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.movie-detail__cast-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movie-detail__cast-name {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.movie-detail__cast-role {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+@media (min-width: 640px) {
+  .movie-detail__hero {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+    gap: 2rem;
+  }
+
+  .movie-detail__poster-wrap {
+    width: 100%;
+  }
+}
