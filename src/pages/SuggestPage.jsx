@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FilterChipGroup from '../components/FilterChipGroup';
 import PillButton from '../components/PillButton';
-import SearchResultCard from '../components/SearchResultCard';
 import { searchPeople } from '../services/tmdb';
 import { getGenresForMediaPreference } from '../utils/genreSuggestions';
 import { randomizeSuggestion } from '../utils/randomizeSuggestion';
@@ -11,6 +11,13 @@ const MEDIA_OPTIONS = [
   { id: 'movie', label: 'Movie' },
   { id: 'tv', label: 'TV show' },
   { id: 'any', label: 'Surprise me' },
+];
+
+const ACCORDION_SECTIONS = [
+  { id: 'mood', label: "I'm in the mood for…" },
+  { id: 'want', label: 'I DO want to see…' },
+  { id: 'dont', label: "I definitely DON'T want to see…" },
+  { id: 'star', label: 'Must star…' },
 ];
 
 const ACTOR_DEBOUNCE_MS = 350;
@@ -44,15 +51,15 @@ function buildSubtitle({ mediaType, includeGenres, excludeGenres, selectedPerson
 }
 
 export default function SuggestPage({ embedded = false }) {
+  const navigate = useNavigate();
+  const [openSection, setOpenSection] = useState('mood');
   const [mediaType, setMediaType] = useState('any');
   const [includeGenres, setIncludeGenres] = useState([]);
   const [excludeGenres, setExcludeGenres] = useState([]);
   const [actorQuery, setActorQuery] = useState('');
   const [actorResults, setActorResults] = useState([]);
-  const [actorStatus, setActorStatus] = useState('idle');
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [status, setStatus] = useState('idle');
-  const [recommendation, setRecommendation] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const genreOptions = useMemo(
@@ -75,23 +82,19 @@ export default function SuggestPage({ embedded = false }) {
     const trimmed = actorQuery.trim();
     if (trimmed.length < 2) {
       setActorResults([]);
-      setActorStatus('idle');
       return undefined;
     }
 
     let cancelled = false;
     const timer = setTimeout(async () => {
-      setActorStatus('loading');
       try {
         const people = await searchPeople(trimmed);
         if (!cancelled) {
           setActorResults(people.slice(0, 6));
-          setActorStatus('success');
         }
       } catch {
         if (!cancelled) {
           setActorResults([]);
-          setActorStatus('error');
         }
       }
     }, ACTOR_DEBOUNCE_MS);
@@ -116,14 +119,10 @@ export default function SuggestPage({ embedded = false }) {
     setSelectedPerson(person);
     setActorQuery(person.title);
     setActorResults([]);
-    setActorStatus('idle');
   }
 
-  function handleClearPerson() {
-    setSelectedPerson(null);
-    setActorQuery('');
-    setActorResults([]);
-    setActorStatus('idle');
+  function toggleSection(sectionId) {
+    setOpenSection((current) => (current === sectionId ? null : sectionId));
   }
 
   async function handleRandomize() {
@@ -137,10 +136,11 @@ export default function SuggestPage({ embedded = false }) {
         excludeGenres,
         personId: selectedPerson?.id ?? null,
       });
-      setRecommendation(pick);
-      setStatus('success');
+      setStatus('idle');
+      const path =
+        pick.mediaType === 'tv' ? `/tv/${pick.id}` : `/movie/${pick.id}`;
+      navigate(path);
     } catch (error) {
-      setRecommendation(null);
       setStatus('error');
       setErrorMessage(
         error instanceof Error
@@ -165,124 +165,129 @@ export default function SuggestPage({ embedded = false }) {
           <p className="suggest-page__subtitle">{subtitle}</p>
         </div>
 
-        <section className="suggest-page__filters" aria-label="Suggestion filters">
-          <div className="suggest-page__filter-block">
-            <h3 className="suggest-page__filter-label">In the mood for</h3>
-            <div className="suggest-page__media-toggle" role="group" aria-label="Media type">
-              {MEDIA_OPTIONS.map((option) => {
-                let className = 'suggest-page__media-btn';
-                if (mediaType === option.id) {
-                  className += ' suggest-page__media-btn--active';
-                }
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={className}
-                    aria-pressed={mediaType === option.id}
-                    onClick={() => setMediaType(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div className="suggest-page__accordion" aria-label="Suggestion filters">
+          {ACCORDION_SECTIONS.map((section) => {
+            const isOpen = openSection === section.id;
+            const panelId = `suggest-panel-${section.id}`;
+            const headerId = `suggest-header-${section.id}`;
 
-          <div className="suggest-page__filter-block">
-            <h3 className="suggest-page__filter-label">Want to see</h3>
-            <FilterChipGroup
-              options={genreOptions}
-              selected={includeGenres}
-              onChange={handleIncludeChange}
-              disabledOptions={excludeGenres}
-              ariaLabel="Genres you want"
-            />
-          </div>
-
-          <div className="suggest-page__filter-block">
-            <h3 className="suggest-page__filter-label">Don’t want</h3>
-            <FilterChipGroup
-              options={genreOptions}
-              selected={excludeGenres}
-              onChange={handleExcludeChange}
-              disabledOptions={includeGenres}
-              ariaLabel="Genres to avoid"
-            />
-          </div>
-
-          <div className="suggest-page__filter-block">
-            <h3 className="suggest-page__filter-label">Must star</h3>
-            <div className="suggest-page__actor">
-              <div className="suggest-page__actor-field">
-                <input
-                  type="search"
-                  className="suggest-page__actor-input"
-                  placeholder="Actor or actress (optional)"
-                  value={actorQuery}
-                  onChange={(event) => {
-                    setActorQuery(event.target.value);
-                    if (selectedPerson) {
-                      setSelectedPerson(null);
-                    }
-                  }}
-                  aria-label="Search for an actor or actress"
-                  autoComplete="off"
-                />
-                {selectedPerson || actorQuery ? (
+            return (
+              <div
+                key={section.id}
+                className={`suggest-page__accordion-item${isOpen ? ' suggest-page__accordion-item--open' : ''}`}
+              >
+                <h3 className="suggest-page__accordion-heading">
                   <button
                     type="button"
-                    className="suggest-page__actor-clear"
-                    onClick={handleClearPerson}
-                    aria-label="Clear actor filter"
+                    id={headerId}
+                    className="suggest-page__accordion-trigger"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => toggleSection(section.id)}
                   >
-                    Clear
+                    <span>{section.label}</span>
+                    <span className="suggest-page__accordion-icon" aria-hidden="true" />
                   </button>
-                ) : null}
-              </div>
+                </h3>
 
-              {!selectedPerson && actorStatus === 'loading' ? (
-                <p className="suggest-page__actor-status">Searching…</p>
-              ) : null}
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={headerId}
+                  className="suggest-page__accordion-panel"
+                  hidden={!isOpen}
+                >
+                  {section.id === 'mood' ? (
+                    <div className="suggest-page__media-toggle" role="group" aria-label="Media type">
+                      {MEDIA_OPTIONS.map((option) => {
+                        let className = 'suggest-page__media-btn';
+                        if (mediaType === option.id) {
+                          className += ' suggest-page__media-btn--active';
+                        }
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={className}
+                            aria-pressed={mediaType === option.id}
+                            onClick={() => setMediaType(option.id)}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
 
-              {!selectedPerson && actorStatus === 'error' ? (
-                <p className="suggest-page__actor-status suggest-page__actor-status--error">
-                  Couldn’t search people. Try again.
-                </p>
-              ) : null}
+                  {section.id === 'want' ? (
+                    <FilterChipGroup
+                      options={genreOptions}
+                      selected={includeGenres}
+                      onChange={handleIncludeChange}
+                      disabledOptions={excludeGenres}
+                      ariaLabel="Genres you want"
+                    />
+                  ) : null}
 
-              {!selectedPerson && actorResults.length > 0 ? (
-                <ul className="suggest-page__actor-results" role="listbox">
-                  {actorResults.map((person) => (
-                    <li key={person.id}>
-                      <button
-                        type="button"
-                        className="suggest-page__actor-result"
-                        role="option"
-                        onClick={() => handleSelectPerson(person)}
-                      >
-                        <img
-                          className="suggest-page__actor-photo"
-                          src={person.posterUrl}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
+                  {section.id === 'dont' ? (
+                    <FilterChipGroup
+                      options={genreOptions}
+                      selected={excludeGenres}
+                      onChange={handleExcludeChange}
+                      disabledOptions={includeGenres}
+                      ariaLabel="Genres to avoid"
+                    />
+                  ) : null}
+
+                  {section.id === 'star' ? (
+                    <div className="suggest-page__actor">
+                      <div className="suggest-page__actor-field">
+                        <input
+                          type="search"
+                          className="suggest-page__actor-input"
+                          placeholder="Actor or actress (optional)"
+                          value={actorQuery}
+                          onChange={(event) => {
+                            setActorQuery(event.target.value);
+                            if (selectedPerson) {
+                              setSelectedPerson(null);
+                            }
+                          }}
+                          aria-label="Search for an actor or actress"
+                          autoComplete="off"
                         />
-                        <span>{person.title}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                      </div>
 
-              {selectedPerson ? (
-                <p className="suggest-page__actor-selected">
-                  Filtering by {selectedPerson.title}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </section>
+                      {!selectedPerson && actorResults.length > 0 ? (
+                        <ul className="suggest-page__actor-results" role="listbox">
+                          {actorResults.map((person) => (
+                            <li key={person.id}>
+                              <button
+                                type="button"
+                                className="suggest-page__actor-result"
+                                role="option"
+                                onClick={() => handleSelectPerson(person)}
+                              >
+                                <img
+                                  className="suggest-page__actor-photo"
+                                  src={person.posterUrl}
+                                  alt=""
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                                <span>{person.title}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         <PillButton
           className="suggest-page__randomize"
@@ -292,29 +297,11 @@ export default function SuggestPage({ embedded = false }) {
           {status === 'loading' ? 'Finding something…' : 'Randomize'}
         </PillButton>
 
-        <div className="suggest-page__result" aria-live="polite">
-          {status === 'error' ? (
-            <p className="suggest-page__message suggest-page__message--error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-
-          {status === 'success' && recommendation ? (
-            <div className="suggest-page__card-wrap">
-              <p className="suggest-page__result-label">
-                How about this{' '}
-                {recommendation.mediaType === 'tv' ? 'TV show' : 'movie'}?
-              </p>
-              <SearchResultCard
-                id={recommendation.id}
-                title={recommendation.title}
-                year={recommendation.year}
-                posterUrl={recommendation.posterUrl}
-                mediaType={recommendation.mediaType}
-              />
-            </div>
-          ) : null}
-        </div>
+        {status === 'error' && errorMessage ? (
+          <p className="suggest-page__message suggest-page__message--error" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
       </div>
     </div>
   );
