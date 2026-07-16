@@ -249,6 +249,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     <div className={pageClassName}>
       <div className="search-page__content">
         <div className="search-page__top">
+          <h2 className="search-page__title">Search</h2>
           <div className="search-page__search-field">
             <SearchBar
               value={inputValue}

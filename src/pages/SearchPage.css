@@ -59,9 +59,23 @@
 .search-page__top {
   width: 100%;
   max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
   transition:
     transform 0.45s ease,
     max-width 0.45s ease;
+}
+
+.search-page__title {
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  text-align: center;
 }
 
 .search-page--active .search-page__top {
@@ -199,8 +213,23 @@
     gap: 0.5rem;
   }
 
+  .search-page__top {
+    gap: 0.75rem;
+  }
+
+  .search-page__title {
+    font-size: clamp(1.875rem, 7.5vw, 2.5rem);
+    line-height: 1.2;
+  }
+
   .search-page__help {
     margin-top: clamp(5rem, 16vh, 8rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .search-page__title {
+    font-size: clamp(1.625rem, 8vw, 1.875rem);
   }
 }
 
