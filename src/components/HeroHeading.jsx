@@ -105,30 +105,32 @@ function HeroHeading({
   }, []);
 
   return (
-    <div className="hero-heading">
-      <h1 className="hero-heading__title">
-        Find any{' '}
-        <span className="hero-heading__word-slot" aria-live="polite">
-          <span className="hero-heading__typed-word">{displayedText}</span>
-          <span
-            className={
-              showCursor
-                ? 'hero-heading__cursor'
-                : 'hero-heading__cursor hero-heading__cursor--hidden'
-            }
-            aria-hidden="true"
-          />
-        </span>
-        .
-      </h1>
-      {subtitle ? <p className="hero-heading__subtitle">{subtitle}</p> : null}
-      <div className="hero-heading__attribution-slot">
-        <div className="hero-heading__attribution-track">
-          {showAttribution ? (
-            <p className="hero-heading__attribution hero-heading__attribution--visible">
-              Powered by <span className="hero-heading__attribution-brand">TMDB</span>
-            </p>
-          ) : null}
+    <>
+      <div className="hero-heading">
+        <h1 className="hero-heading__title">
+          Find any{' '}
+          <span className="hero-heading__word-slot" aria-live="polite">
+            <span className="hero-heading__typed-word">{displayedText}</span>
+            <span
+              className={
+                showCursor
+                  ? 'hero-heading__cursor'
+                  : 'hero-heading__cursor hero-heading__cursor--hidden'
+              }
+              aria-hidden="true"
+            />
+          </span>
+          .
+        </h1>
+        {subtitle ? <p className="hero-heading__subtitle">{subtitle}</p> : null}
+        <div className="hero-heading__attribution-slot">
+          <div className="hero-heading__attribution-track">
+            {showAttribution ? (
+              <p className="hero-heading__attribution hero-heading__attribution--visible">
+                Powered by <span className="hero-heading__attribution-brand">TMDB</span>
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
       {showButton ? (
@@ -149,7 +151,7 @@ function HeroHeading({
           ) : null}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

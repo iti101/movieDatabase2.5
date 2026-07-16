@@ -32,12 +32,90 @@
     cursor: pointer;
     transition:
             background-color 0.15s ease,
-            transform 0.15s ease;
+            transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .navbar__menu-btn:hover {
     background: #f3f4f6;
     transform: scale(1.04);
+}
+
+.navbar__menu-btn--tucked {
+    transform: translateX(calc(-100% - 3rem));
+    pointer-events: none;
+}
+
+.navbar__menu-btn--tucked:hover {
+    background: transparent;
+    transform: translateX(calc(-100% - 3rem));
+}
+
+/* Peek control when hamburger is tucked on detail pages */
+.navbar__menu-peek {
+    position: fixed;
+    top: 1.55rem;
+    left: 0.35rem;
+    z-index: 101;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    background: #ffffff;
+    color: #111827;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, 0.1);
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+            opacity 0.3s ease,
+            transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            background-color 0.15s ease,
+            box-shadow 0.15s ease;
+}
+
+.navbar__menu-peek:hover {
+    background: #f9fafb;
+    box-shadow: 0 2px 8px rgba(17, 24, 39, 0.14);
+}
+
+.navbar__menu-peek--hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-0.75rem);
+}
+
+.navbar__menu-peek-icon {
+    position: relative;
+    display: block;
+    width: 0.7rem;
+    height: 0.55rem;
+}
+
+.navbar__menu-peek-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.5px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+.navbar__menu-peek-line:nth-child(1) {
+    top: 0;
+}
+
+.navbar__menu-peek-line:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.navbar__menu-peek-line:nth-child(3) {
+    top: 100%;
+    transform: translateY(-100%);
 }
 
 .navbar__menu-icon {
@@ -254,6 +332,11 @@
         padding: 1rem clamp(1rem, 4vw, 1.25rem);
     }
 
+    .navbar__menu-peek {
+        top: 1.3rem;
+        left: 0.25rem;
+    }
+
     .navbar__account-panel {
         width: min(16rem, calc(100vw - 2rem));
         right: 0;
@@ -270,13 +353,29 @@
         width: 2.5rem;
         height: 2.5rem;
     }
+
+    .navbar__menu-peek {
+        top: 1.25rem;
+        width: 1.35rem;
+        height: 1.35rem;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .navbar__menu-btn,
+    .navbar__menu-peek {
+        transition: none;
+    }
+
     .navbar__menu-btn:hover,
     .navbar__account-btn:hover,
     .navbar__account-signin:hover,
     .navbar__fullscreen-link:hover {
         transform: none;
+    }
+
+    .navbar__menu-btn--tucked,
+    .navbar__menu-btn--tucked:hover {
+        transform: translateX(calc(-100% - 3rem));
     }
 }

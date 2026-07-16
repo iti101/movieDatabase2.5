@@ -77,7 +77,13 @@ function buildSubtitle({ mediaType, includeGenres, excludeGenres, selectedPerson
   }
 
   if (parts.length === 0) {
-    return 'No idea what to watch? Hit Randomize for a surprise — or tweak the filters first.';
+    return (
+      <>
+        No idea what to watch?
+        <br />
+        Hit Randomize for a surprise — or tweak the filters first.
+      </>
+    );
   }
 
   return `Looking for ${parts.join(', ')}. Hit Randomize whenever you’re ready.`;
@@ -331,53 +337,60 @@ export default function SuggestPage({ embedded = false }) {
           })}
         </div>
 
-        <PillButton
-          className="suggest-page__randomize"
-          onClick={handleRandomize}
-          disabled={status === 'loading'}
+        <div
+          className={
+            result
+              ? 'suggest-page__action suggest-page__action--revealed'
+              : 'suggest-page__action'
+          }
         >
-          {status === 'loading' ? 'Finding something…' : 'Randomize'}
-        </PillButton>
+          <PillButton
+            className="suggest-page__randomize"
+            onClick={handleRandomize}
+            disabled={status === 'loading'}
+          >
+            {status === 'loading' ? 'Finding something…' : 'Randomize'}
+          </PillButton>
 
-        {status === 'error' && errorMessage ? (
-          <p className="suggest-page__message suggest-page__message--error" role="alert">
-            {errorMessage}
-          </p>
-        ) : null}
+          {status === 'error' && errorMessage ? (
+            <p className="suggest-page__message suggest-page__message--error" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
 
-        {result ? (
-          <div className="suggest-page__result" aria-live="polite">
-            <button
-              type="button"
-              className="suggest-page__reaction suggest-page__reaction--reject"
-              onClick={handleRandomize}
-              disabled={status === 'loading'}
-              aria-label="Not this one — get another suggestion"
-            >
-              <SadIcon />
-            </button>
+          {result ? (
+            <div className="suggest-page__result" aria-live="polite">
+              <button
+                type="button"
+                className="suggest-page__reaction suggest-page__reaction--reject"
+                onClick={handleRandomize}
+                disabled={status === 'loading'}
+                aria-label="Not this one — get another suggestion"
+              >
+                <SadIcon />
+              </button>
 
-            <div className="suggest-page__result-card">
-              <SearchResultCard
-                id={result.id}
-                title={result.title}
-                year={result.year}
-                posterUrl={result.posterUrl}
-                mediaType={result.mediaType}
-                asLink={false}
-              />
+              <div className="suggest-page__result-card">
+                <SearchResultCard
+                  id={result.id}
+                  title={result.title}
+                  year={result.year}
+                  posterUrl={result.posterUrl}
+                  mediaType={result.mediaType}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="suggest-page__reaction suggest-page__reaction--accept"
+                onClick={handleAcceptResult}
+                aria-label={`Open details for ${result.title}`}
+              >
+                <SmileIcon />
+              </button>
             </div>
-
-            <button
-              type="button"
-              className="suggest-page__reaction suggest-page__reaction--accept"
-              onClick={handleAcceptResult}
-              aria-label={`Open details for ${result.title}`}
-            >
-              <SmileIcon />
-            </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

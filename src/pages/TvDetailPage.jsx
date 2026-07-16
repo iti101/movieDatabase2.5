@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import WatchProviders from '../components/WatchProviders';
 import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
@@ -80,7 +81,23 @@ export default function TvDetailPage() {
           to={{ pathname: '/', hash: '#suggest' }}
           state={{ scrollTo: 'suggest' }}
         >
-          ← Back
+          <svg
+            className="movie-detail__back-icon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M14 5L7 12l7 7"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Back
         </Link>
 
         {status === 'loading' ? (
@@ -176,6 +193,8 @@ export default function TvDetailPage() {
                 {show.overview || 'No synopsis available for this show.'}
               </p>
             </section>
+
+            <WatchProviders watchProviders={show.watchProviders} />
 
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">

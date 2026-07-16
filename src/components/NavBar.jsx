@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './NavBar.css';
 
@@ -145,10 +145,15 @@ function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, onSearchClick, onHom
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const authLabel = isLoggedIn ? 'Log out' : 'Log in';
+  const isDetailPage =
+    location.pathname.startsWith('/movie/') ||
+    location.pathname.startsWith('/tv/');
+  const menuTucked = isDetailPage && !menuOpen;
 
   // Stop the page from scrolling while the fullscreen menu is open
   useEffect(() => {
@@ -226,6 +231,9 @@ export default function Navbar() {
   if (menuOpen) {
     menuButtonClass += ' navbar__menu-btn--open';
   }
+  if (menuTucked) {
+    menuButtonClass += ' navbar__menu-btn--tucked';
+  }
 
   return (
     <>
@@ -237,10 +245,34 @@ export default function Navbar() {
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="navbar-fullscreen-menu"
+            aria-hidden={menuTucked}
+            tabIndex={menuTucked ? -1 : undefined}
             onClick={toggleMenu}
           >
             <MenuIcon />
           </button>
+
+          {isDetailPage ? (
+            <button
+              type="button"
+              className={
+                menuTucked
+                  ? 'navbar__menu-peek'
+                  : 'navbar__menu-peek navbar__menu-peek--hidden'
+              }
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="navbar-fullscreen-menu"
+              tabIndex={menuTucked ? undefined : -1}
+              onClick={toggleMenu}
+            >
+              <span className="navbar__menu-peek-icon" aria-hidden="true">
+                <span className="navbar__menu-peek-line" />
+                <span className="navbar__menu-peek-line" />
+                <span className="navbar__menu-peek-line" />
+              </span>
+            </button>
+          ) : null}
 
           <div className="navbar__account">
             <button

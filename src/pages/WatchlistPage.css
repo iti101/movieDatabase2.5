@@ -1,13 +1,55 @@
 .watchlist-page {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 6rem 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) 3rem;
+  background: var(--page-bg);
+  background-size: var(--page-bg-size);
+  box-sizing: border-box;
+}
+
+.watchlist-page--filled {
+  align-items: flex-start;
+}
+
+.watchlist-page__inner {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.watchlist-page__title {
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #0f172a;
 }
 
 .watchlist-page__message {
-    font-size: 1.125rem;
-    color: #6b7280;
-    text-align: center;
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: #6b7280;
+  text-align: center;
+}
+
+.watchlist-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 1.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .watchlist-page__grid {
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: 1rem 0.75rem;
+  }
 }

@@ -2,6 +2,8 @@ const API_BASE = 'https://api.themoviedb.org/3';
 const POSTER_SIZE = 'w342';
 const DETAIL_POSTER_SIZE = 'w500';
 const PROFILE_SIZE = 'w185';
+const PROVIDER_LOGO_SIZE = 'w92';
+const DEFAULT_WATCH_REGION = 'US';
 
 const POSTER_PLACEHOLDER =
   'data:image/svg+xml,' +
@@ -137,6 +139,34 @@ async function tmdbFetch(endpoint, params = {}) {
   return response.json();
 }
 
+let watchProviderRegionsPromise = null;
+
+/**
+ * Returns TMDB's JustWatch country list (cached for the session).
+ */
+export async function getWatchProviderRegions() {
+  if (!watchProviderRegionsPromise) {
+    watchProviderRegionsPromise = tmdbFetch('/watch/providers/regions')
+      .then((data) => {
+        const regions = (data.results ?? [])
+          .map((region) => ({
+            code: String(region.iso_3166_1 || '').toUpperCase(),
+            label: region.english_name || region.iso_3166_1,
+          }))
+          .filter((region) => /^[A-Z]{2}$/.test(region.code));
+
+        regions.sort((a, b) => a.label.localeCompare(b.label));
+        return regions;
+      })
+      .catch((error) => {
+        watchProviderRegionsPromise = null;
+        throw error;
+      });
+  }
+
+  return watchProviderRegionsPromise;
+}
+
 export async function searchMovies(query) {
   const data = await tmdbFetch('/search/movie', {
     query,
@@ -229,6 +259,72 @@ function getTrailerUrl(videos) {
   return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
 }
 
+function getWatchRegion() {
+  const fromEnv = import.meta.env.VITE_WATCH_REGION;
+  if (typeof fromEnv === 'string' && /^[A-Za-z]{2}$/.test(fromEnv.trim())) {
+    return fromEnv.trim().toUpperCase();
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    const parts = navigator.language.split('-');
+    if (parts.length >= 2 && /^[A-Za-z]{2}$/.test(parts[1])) {
+      return parts[1].toUpperCase();
+    }
+  }
+
+  return DEFAULT_WATCH_REGION;
+}
+
+function normalizeProviderList(providers) {
+  if (!Array.isArray(providers) || providers.length === 0) {
+    return [];
+  }
+
+  return providers.map((provider) => ({
+    id: provider.provider_id,
+    name: provider.provider_name,
+    logoUrl: getPosterUrl(provider.logo_path, PROVIDER_LOGO_SIZE),
+  }));
+}
+
+function normalizeRegionProviders(regionData) {
+  if (!regionData) {
+    return {
+      link: null,
+      stream: [],
+      rent: [],
+      buy: [],
+    };
+  }
+
+  return {
+    link: regionData.link || null,
+    stream: normalizeProviderList(regionData.flatrate),
+    rent: normalizeProviderList(regionData.rent),
+    buy: normalizeProviderList(regionData.buy),
+  };
+}
+
+/**
+ * Normalizes TMDB JustWatch-backed watch providers for every available country.
+ * The UI picks a region via dropdown; preferredRegion is the browser/env default.
+ */
+function normalizeWatchProviders(watchProviders) {
+  const results = watchProviders?.results ?? {};
+  const preferredRegion = getWatchRegion();
+  const byRegion = {};
+
+  for (const [code, regionData] of Object.entries(results)) {
+    byRegion[code] = normalizeRegionProviders(regionData);
+  }
+
+  return {
+    preferredRegion,
+    availableRegions: Object.keys(byRegion).sort(),
+    byRegion,
+  };
+}
+
 function normalizeMovieDetails(data) {
   const crew = data.credits?.crew ?? [];
   const directors = crew
@@ -254,11 +350,12 @@ function normalizeMovieDetails(data) {
     director: directors.length > 0 ? directors.join(', ') : '',
     cast,
     trailerUrl: getTrailerUrl(data.videos),
+    watchProviders: normalizeWatchProviders(data['watch/providers']),
   };
 }
 
 /**
- * Fetches full movie details including credits (cast + crew) and videos.
+ * Fetches full movie details including credits, videos, and watch providers.
  */
 export async function getMovieDetails(movieId) {
   if (!movieId) {
@@ -266,7 +363,7 @@ export async function getMovieDetails(movieId) {
   }
 
   const data = await tmdbFetch(`/movie/${movieId}`, {
-    append_to_response: 'credits,videos',
+    append_to_response: 'credits,videos,watch/providers',
   });
 
   return normalizeMovieDetails(data);
@@ -294,12 +391,13 @@ function normalizeTvDetails(data) {
     creators: creators.length > 0 ? creators.join(', ') : '',
     cast,
     trailerUrl: getTrailerUrl(data.videos),
+    watchProviders: normalizeWatchProviders(data['watch/providers']),
     mediaType: 'tv',
   };
 }
 
 /**
- * Fetches full TV details including credits (cast) and videos.
+ * Fetches full TV details including credits, videos, and watch providers.
  */
 export async function getTvDetails(tvId) {
   if (!tvId) {
@@ -307,7 +405,7 @@ export async function getTvDetails(tvId) {
   }
 
   const data = await tmdbFetch(`/tv/${tvId}`, {
-    append_to_response: 'credits,videos',
+    append_to_response: 'credits,videos,watch/providers',
   });
 
   return normalizeTvDetails(data);

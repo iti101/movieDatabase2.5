@@ -3,7 +3,7 @@
   text-align: center;
   width: 100%;
   max-width: 36rem;
-  padding: 0 clamp(0.5rem, 3vw, 1.5rem) 4.5rem;
+  padding: 0 clamp(0.5rem, 3vw, 1.5rem);
 }
 
 .hero-heading__title {
@@ -16,7 +16,7 @@
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #0f172a;
-  background: #ffffff;
+  background: transparent;
 }
 
 .hero-heading__word-slot {
@@ -139,7 +139,7 @@
 .hero-heading__cta {
   position: absolute;
   left: 50%;
-  top: calc(100% + 0.75rem);
+  bottom: clamp(1.5rem, 5vh, 2.75rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -217,17 +217,13 @@
 }
 
 @media (max-width: 640px) {
-  .hero-heading {
-    padding-bottom: 4rem;
-  }
-
   .hero-heading__title {
     font-size: clamp(1.875rem, 7.5vw, 2.5rem);
     line-height: 1.2;
   }
 
   .hero-heading__cta {
-    top: calc(100% + 0.5rem);
+    bottom: clamp(1.25rem, 4vh, 2rem);
     width: calc(100% - 1rem);
     max-width: 18rem;
   }

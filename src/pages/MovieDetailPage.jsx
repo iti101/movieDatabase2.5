@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import PillButton from '../components/PillButton';
+import WatchProviders from '../components/WatchProviders';
+import { useAuth } from '../context/AuthContext';
 import { getMovieDetails } from '../services/tmdb';
+import { isInWatchlist, toggleWatchlist } from '../utils/watchlistStorage';
 import './MovieDetailPage.css';
 
 function formatRating(rating) {
@@ -13,9 +17,11 @@ function formatRating(rating) {
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [movie, setMovie] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [onWatchlist, setOnWatchlist] = useState(false);
 
   function handleCastClick(member) {
     navigate(
@@ -33,6 +39,26 @@ export default function MovieDetailPage() {
     );
   }
 
+  function handleWatchlistClick() {
+    if (!movie) {
+      return;
+    }
+
+    if (!isLoggedIn) {
+      navigate(`/login?redirect=${encodeURIComponent(`/movie/${movie.id}`)}`);
+      return;
+    }
+
+    const { added } = toggleWatchlist({
+      id: movie.id,
+      title: movie.title,
+      year: movie.year,
+      posterUrl: movie.posterUrl,
+      mediaType: 'movie',
+    });
+    setOnWatchlist(added);
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -45,6 +71,7 @@ export default function MovieDetailPage() {
         const details = await getMovieDetails(id);
         if (!cancelled) {
           setMovie(details);
+          setOnWatchlist(isInWatchlist(details.id, 'movie'));
           setStatus('success');
         }
       } catch (error) {
@@ -80,7 +107,23 @@ export default function MovieDetailPage() {
           to={{ pathname: '/', hash: '#search' }}
           state={{ scrollTo: 'search' }}
         >
-          ← Back to search
+          <svg
+            className="movie-detail__back-icon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M14 5L7 12l7 7"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Back
         </Link>
 
         {status === 'loading' ? (
@@ -165,6 +208,17 @@ export default function MovieDetailPage() {
                     </div>
                   ) : null}
                 </dl>
+
+                <PillButton
+                  className={
+                    onWatchlist
+                      ? 'movie-detail__watchlist movie-detail__watchlist--saved'
+                      : 'movie-detail__watchlist'
+                  }
+                  onClick={handleWatchlistClick}
+                >
+                  {onWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+                </PillButton>
               </div>
             </div>
 
@@ -176,6 +230,8 @@ export default function MovieDetailPage() {
                 {movie.overview || 'No synopsis available for this movie.'}
               </p>
             </section>
+
+            <WatchProviders watchProviders={movie.watchProviders} />
 
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
