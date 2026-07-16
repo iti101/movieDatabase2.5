@@ -34,9 +34,10 @@
 
 .suggest-page__title {
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   color: #0f172a;
 }
 
@@ -78,19 +79,17 @@
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #64748b;
+  font-size: clamp(1.375rem, 3.5vw, 1.875rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  text-align: left;
   cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .suggest-page__accordion-trigger:hover {
-  color: #0f172a;
   background: #f8fafc;
 }
 
@@ -265,6 +264,64 @@
   margin-top: 0.25rem;
 }
 
+.suggest-page__result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  animation: suggest-result-in 0.35s ease both;
+}
+
+.suggest-page__result-card {
+  width: 100%;
+  max-width: 10.5rem;
+  flex-shrink: 0;
+}
+
+.suggest-page__reaction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.suggest-page__reaction:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: scale(1.06);
+}
+
+.suggest-page__reaction:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@keyframes suggest-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .suggest-page__message {
   margin: 0;
   font-size: 0.9375rem;
@@ -285,12 +342,23 @@
     gap: 1.5rem;
   }
 
+  .suggest-page__title {
+    font-size: clamp(1.875rem, 7.5vw, 2.5rem);
+    line-height: 1.2;
+  }
+
   .suggest-page__accordion-trigger {
     padding: 0.875rem 1rem;
-    font-size: 0.8125rem;
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
   }
 
   .suggest-page__accordion-panel {
     padding: 0 1rem 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .suggest-page__title {
+    font-size: clamp(1.625rem, 8vw, 1.875rem);
   }
 }

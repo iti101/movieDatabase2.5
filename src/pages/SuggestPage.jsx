@@ -2,10 +2,43 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FilterChipGroup from '../components/FilterChipGroup';
 import PillButton from '../components/PillButton';
+import SearchResultCard from '../components/SearchResultCard';
 import { searchPeople } from '../services/tmdb';
 import { getGenresForMediaPreference } from '../utils/genreSuggestions';
 import { randomizeSuggestion } from '../utils/randomizeSuggestion';
 import './SuggestPage.css';
+
+function SmileIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="#ffffff" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="9" cy="10" r="1.1" fill="currentColor" />
+      <circle cx="15" cy="10" r="1.1" fill="currentColor" />
+      <path
+        d="M8.5 14c1.1 1.4 2.5 2.1 3.5 2.1s2.4-.7 3.5-2.1"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function SadIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="#ffffff" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="9" cy="10" r="1.1" fill="currentColor" />
+      <circle cx="15" cy="10" r="1.1" fill="currentColor" />
+      <path
+        d="M8.5 16.5c1.1-1.4 2.5-2.1 3.5-2.1s2.4.7 3.5 2.1"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 const MEDIA_OPTIONS = [
   { id: 'movie', label: 'Movie' },
@@ -61,6 +94,7 @@ export default function SuggestPage({ embedded = false }) {
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [result, setResult] = useState(null);
 
   const genreOptions = useMemo(
     () => getGenresForMediaPreference(mediaType),
@@ -136,11 +170,10 @@ export default function SuggestPage({ embedded = false }) {
         excludeGenres,
         personId: selectedPerson?.id ?? null,
       });
+      setResult(pick);
       setStatus('idle');
-      const path =
-        pick.mediaType === 'tv' ? `/tv/${pick.id}` : `/movie/${pick.id}`;
-      navigate(path);
     } catch (error) {
+      setResult(null);
       setStatus('error');
       setErrorMessage(
         error instanceof Error
@@ -148,6 +181,15 @@ export default function SuggestPage({ embedded = false }) {
           : 'Something went wrong. Please try again.',
       );
     }
+  }
+
+  function handleAcceptResult() {
+    if (!result) {
+      return;
+    }
+    const path =
+      result.mediaType === 'tv' ? `/tv/${result.id}` : `/movie/${result.id}`;
+    navigate(path);
   }
 
   const subtitle = buildSubtitle({
@@ -161,7 +203,7 @@ export default function SuggestPage({ embedded = false }) {
     <div className={`suggest-page${embedded ? ' suggest-page--embedded' : ''}`}>
       <div className="suggest-page__content">
         <div className="suggest-page__header">
-          <h2 className="suggest-page__title">Let us help</h2>
+          <h1 className="suggest-page__title">Let us help</h1>
           <p className="suggest-page__subtitle">{subtitle}</p>
         </div>
 
@@ -176,7 +218,7 @@ export default function SuggestPage({ embedded = false }) {
                 key={section.id}
                 className={`suggest-page__accordion-item${isOpen ? ' suggest-page__accordion-item--open' : ''}`}
               >
-                <h3 className="suggest-page__accordion-heading">
+                <h2 className="suggest-page__accordion-heading">
                   <button
                     type="button"
                     id={headerId}
@@ -188,7 +230,7 @@ export default function SuggestPage({ embedded = false }) {
                     <span>{section.label}</span>
                     <span className="suggest-page__accordion-icon" aria-hidden="true" />
                   </button>
-                </h3>
+                </h2>
 
                 <div
                   id={panelId}
@@ -301,6 +343,40 @@ export default function SuggestPage({ embedded = false }) {
           <p className="suggest-page__message suggest-page__message--error" role="alert">
             {errorMessage}
           </p>
+        ) : null}
+
+        {result ? (
+          <div className="suggest-page__result" aria-live="polite">
+            <button
+              type="button"
+              className="suggest-page__reaction suggest-page__reaction--reject"
+              onClick={handleRandomize}
+              disabled={status === 'loading'}
+              aria-label="Not this one — get another suggestion"
+            >
+              <SadIcon />
+            </button>
+
+            <div className="suggest-page__result-card">
+              <SearchResultCard
+                id={result.id}
+                title={result.title}
+                year={result.year}
+                posterUrl={result.posterUrl}
+                mediaType={result.mediaType}
+                asLink={false}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="suggest-page__reaction suggest-page__reaction--accept"
+              onClick={handleAcceptResult}
+              aria-label={`Open details for ${result.title}`}
+            >
+              <SmileIcon />
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
