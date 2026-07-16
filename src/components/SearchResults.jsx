@@ -1,51 +1,27 @@
 import SearchResultCard from './SearchResultCard';
 import './SearchResults.css';
 
-const TABS = [
-  { id: 'movie', label: 'Movies' },
-  { id: 'tv', label: 'TV Shows' },
-];
-
 export default function SearchResults({
-  activeTab,
-  onTabChange,
   results,
   status,
   query,
+  contextLabel,
   errorMessage,
+  hideEmptyMessage = false,
 }) {
-  const showTabs = Boolean(query);
+  const loadingMessage = contextLabel
+    ? `Searching by ${contextLabel} for “${query}”…`
+    : `Searching for “${query}”…`;
+
+  const emptyMessage = contextLabel
+    ? `No ${contextLabel} results found for “${query}”.`
+    : `No results found for “${query}”.`;
 
   return (
-    <div className="search-results">
-      {showTabs ? (
-        <div className="search-results__tabs" role="tablist" aria-label="Search result type">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              className={
-                'search-results__tab' +
-                (activeTab === tab.id ? ' search-results__tab--active' : '')
-              }
-              aria-selected={activeTab === tab.id}
-              onClick={() => onTabChange(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      <div
-        className="search-results__body"
-        role="tabpanel"
-        aria-live="polite"
-        aria-busy={status === 'loading'}
-      >
+    <section className="search-results" aria-label="Search results">
+      <div className="search-results__body" aria-live="polite" aria-busy={status === 'loading'}>
         {status === 'loading' ? (
-          <p className="search-results__message">Searching for &ldquo;{query}&rdquo;&hellip;</p>
+          <p className="search-results__message">{loadingMessage}</p>
         ) : null}
 
         {status === 'error' ? (
@@ -54,22 +30,25 @@ export default function SearchResults({
           </p>
         ) : null}
 
-        {status === 'success' && results.length === 0 ? (
-          <p className="search-results__message">
-            No results found for &ldquo;{query}&rdquo;.
-          </p>
+        {status === 'success' && results.length === 0 && !hideEmptyMessage ? (
+          <p className="search-results__message">{emptyMessage}</p>
         ) : null}
 
         {status === 'success' && results.length > 0 ? (
           <ul className="search-results__grid">
             {results.map((item) => (
               <li key={`${item.mediaType}-${item.id}`}>
-                <SearchResultCard title={item.title} posterUrl={item.posterUrl} />
+                <SearchResultCard
+                  title={item.title}
+                  year={item.year}
+                  posterUrl={item.posterUrl}
+                />
+
               </li>
             ))}
           </ul>
         ) : null}
       </div>
-    </div>
+    </section>
   );
 }

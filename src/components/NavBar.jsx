@@ -67,7 +67,7 @@ function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
   );
 }
 
-function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, authLabel }) {
+function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, onSearchClick, onHomeClick, authLabel }) {
   let overlayClass = 'navbar__overlay';
   if (isOpen) {
     overlayClass += ' navbar__overlay--open';
@@ -103,13 +103,36 @@ function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, authLabel }) {
             );
           }
 
+          if (link.to === '/search') {
+            return (
+              <NavLink
+                key={link.label}
+                to="/search"
+                className="navbar__fullscreen-link"
+                style={{ transitionDelay: delay }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  onSearchClick();
+                  onLinkClick();
+                }}
+              >
+                {link.label}
+              </NavLink>
+            );
+          }
+
           return (
             <NavLink
               key={link.label}
               to={link.to}
               className="navbar__fullscreen-link"
               style={{ transitionDelay: delay }}
-              onClick={onLinkClick}
+              onClick={() => {
+                if (link.to === '/') {
+                  onHomeClick();
+                }
+                onLinkClick();
+              }}
             >
               {link.label}
             </NavLink>
@@ -185,6 +208,20 @@ export default function Navbar() {
     }
   }
 
+  function handleSearchClick() {
+    // Jump to the search section on the scrollable home page.
+    navigate(
+      { pathname: '/', hash: '#search' },
+      { state: { scrollTo: 'search', resetSearch: Date.now() } },
+    );
+  }
+
+  function handleHomeClick() {
+    if (window.location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
   let menuButtonClass = 'navbar__menu-btn';
   if (menuOpen) {
     menuButtonClass += ' navbar__menu-btn--open';
@@ -233,6 +270,8 @@ export default function Navbar() {
         isOpen={menuOpen}
         onLinkClick={closeMenu}
         onAuthClick={handleAuthClick}
+        onSearchClick={handleSearchClick}
+        onHomeClick={handleHomeClick}
         authLabel={authLabel}
       />
     </>

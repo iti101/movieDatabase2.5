@@ -1,12 +1,49 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import SearchPage from './SearchPage';
 import SuggestPage from './SuggestPage';
 import './HomePage.css';
 
+const SECTION_IDS = {
+  search: 'search',
+  suggest: 'suggest',
+};
+
 export default function HomePage() {
+  const location = useLocation();
   const searchSectionRef = useRef(null);
   const suggestSectionRef = useRef(null);
+
+  useEffect(() => {
+    document.documentElement.classList.add('home-page-active');
+
+    return () => {
+      document.documentElement.classList.remove('home-page-active');
+    };
+  }, []);
+
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    const scrollState = location.state?.scrollTo;
+
+    let target = null;
+    if (hash === SECTION_IDS.search || scrollState === SECTION_IDS.search) {
+      target = searchSectionRef.current;
+    } else if (hash === SECTION_IDS.suggest || scrollState === SECTION_IDS.suggest) {
+      target = suggestSectionRef.current;
+    }
+
+    if (!target) {
+      return undefined;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, location.state]);
 
   function handleGetStarted() {
     searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -16,18 +53,25 @@ export default function HomePage() {
     suggestSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  const searchResetKey = location.state?.resetSearch ?? 'search';
+
   return (
     <div className="home-scroll">
-      <section className="home-scroll__section home-scroll__section--landing">
+      <section
+        id="home"
+        className="home-scroll__section home-scroll__section--landing"
+      >
         <LandingPage onGetStarted={handleGetStarted} embedded />
       </section>
       <section
+        id={SECTION_IDS.search}
         ref={searchSectionRef}
         className="home-scroll__section home-scroll__section--search"
       >
-        <SearchPage embedded onLetUsHelp={handleLetUsHelp} />
+        <SearchPage key={searchResetKey} embedded onLetUsHelp={handleLetUsHelp} />
       </section>
       <section
+        id={SECTION_IDS.suggest}
         ref={suggestSectionRef}
         className="home-scroll__section home-scroll__section--suggest"
       >

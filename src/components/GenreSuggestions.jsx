@@ -1,6 +1,6 @@
 import './GenreSuggestions.css';
 
-function GenreSuggestions({ suggestions, onSelect, onAllGenres }) {
+function GenreSuggestions({ suggestions, onSelect, onAllGenres, showAllButton = true }) {
   return (
     <div className="genre-suggestions">
       <div className="genre-suggestions__list">
@@ -15,13 +15,15 @@ function GenreSuggestions({ suggestions, onSelect, onAllGenres }) {
           </button>
         ))}
       </div>
-      <button
-        type="button"
-        className="genre-suggestions__all"
-        onClick={onAllGenres}
-      >
-        All genre&apos;s
-      </button>
+      {showAllButton ? (
+        <button
+          type="button"
+          className="genre-suggestions__all"
+          onClick={onAllGenres}
+        >
+          All genre&apos;s
+        </button>
+      ) : null}
     </div>
   );
 }

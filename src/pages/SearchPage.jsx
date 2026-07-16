@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DidYouMean from '../components/DidYouMean';
 import GenreSuggestions from '../components/GenreSuggestions';
 import PillButton from '../components/PillButton';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
-import { searchMovies, searchTv } from '../services/tmdb';
-import { pickRandomGenres } from '../utils/genreSuggestions';
+import { searchByBrowseMode } from '../services/tmdb';
+import { getAllGenres, MOVIE_GENRES, pickRandomGenres } from '../utils/genreSuggestions';
+import { findSearchSuggestion } from '../utils/searchSuggestion';
 import './SearchPage.css';
 
 function ChevronDownIcon() {
@@ -28,11 +30,23 @@ function getBrowsePlaceholder(label) {
   return `Search for ${article} ${term}...`;
 }
 
-async function fetchResults(query, tab) {
-  if (tab === 'tv') {
-    return searchTv(query);
+function getSearchContextLabel(browseOption) {
+  if (!browseOption) {
+    return null;
   }
-  return searchMovies(query);
+
+  switch (browseOption.id) {
+    case 'genre':
+      return 'genre';
+    case 'actor':
+      return 'actor';
+    case 'director':
+      return 'director';
+    case 'release-date':
+      return 'release year';
+    default:
+      return browseOption.label.toLowerCase();
+  }
 }
 
 export default function SearchPage({ embedded = false, onLetUsHelp }) {
@@ -40,16 +54,22 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
   const [browseOption, setBrowseOption] = useState(null);
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
+  const [inputValue, setInputValue] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('movie');
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [suggestion, setSuggestion] = useState(null);
 
-  const isActive = Boolean(activeQuery);
+  const browseMode = browseOption?.id ?? null;
+  const isActive = Boolean(activeQuery) || (browseMode === 'genre' && Boolean(selectedGenre));
+  const searchLabel = activeQuery || selectedGenre || '';
 
   useEffect(() => {
-    if (!activeQuery) {
+    const shouldSearch =
+      Boolean(activeQuery) || (browseMode === 'genre' && Boolean(selectedGenre));
+
+    if (!shouldSearch) {
       return undefined;
     }
 
@@ -59,16 +79,33 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
       setStatus('loading');
       setErrorMessage('');
       setResults([]);
+      setSuggestion(null);
 
       try {
-        const data = await fetchResults(activeQuery, activeTab);
-        if (!cancelled) {
-          setResults(data);
-          setStatus('success');
+        const data = await searchByBrowseMode(activeQuery || selectedGenre, browseOption, {
+          selectedGenre,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        setResults(data);
+        setStatus('success');
+
+        if (data.length === 0 && activeQuery) {
+          const closest = await findSearchSuggestion(activeQuery, {
+            hasResults: false,
+            browseMode,
+          });
+          if (!cancelled) {
+            setSuggestion(closest);
+          }
         }
       } catch (error) {
         if (!cancelled) {
           setResults([]);
+          setSuggestion(null);
           setStatus('error');
           setErrorMessage(
             error instanceof Error ? error.message : 'Something went wrong. Please try again.',
@@ -82,30 +119,62 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     return () => {
       cancelled = true;
     };
-  }, [activeQuery, activeTab]);
+  }, [activeQuery, browseOption, browseMode, selectedGenre]);
 
   function handleSearch(query) {
+    setGenreSuggestions([]);
+
     if (!query) {
+      setInputValue('');
       setActiveQuery('');
+      setSelectedGenre(null);
       setResults([]);
+      setSuggestion(null);
       setStatus('idle');
       setErrorMessage('');
       return;
     }
 
+    setInputValue(query);
     setActiveQuery(query);
+
+    if (browseMode === 'genre') {
+      setSelectedGenre(query);
+    }
   }
 
-  function handleTabChange(tab) {
-    if (tab === activeTab) {
-      return;
+  function handleSuggestionSelect(nextQuery) {
+    setInputValue(nextQuery);
+    setActiveQuery(nextQuery);
+    setSuggestion(null);
+
+    if (browseMode === 'genre') {
+      setSelectedGenre(nextQuery);
     }
-    setActiveTab(tab);
   }
 
   function handleBrowse(option) {
+    if (!option) {
+      setBrowseOption(null);
+      setSelectedGenre(null);
+      setGenreSuggestions([]);
+      setActiveQuery('');
+      setInputValue('');
+      setResults([]);
+      setSuggestion(null);
+      setStatus('idle');
+      setErrorMessage('');
+      return;
+    }
+
     setBrowseOption(option);
     setSelectedGenre(null);
+    setActiveQuery('');
+    setInputValue('');
+    setResults([]);
+    setSuggestion(null);
+    setStatus('idle');
+    setErrorMessage('');
 
     if (option.id === 'genre') {
       setGenreSuggestions(pickRandomGenres(8));
@@ -116,10 +185,15 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
 
   function handleGenreSelect(genre) {
     setSelectedGenre(genre);
+    setInputValue(genre);
+    setActiveQuery(genre);
+    setGenreSuggestions([]);
+    setSuggestion(null);
   }
 
   function handleAllGenres() {
     setSelectedGenre(null);
+    setGenreSuggestions(getAllGenres());
   }
 
   function handleHelp() {
@@ -137,6 +211,8 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
       ? getBrowsePlaceholder(browseOption.label)
       : 'Search for a movie...';
 
+  const contextLabel = getSearchContextLabel(browseOption);
+
   const pageClassName = [
     'search-page',
     embedded ? 'search-page--embedded' : '',
@@ -151,16 +227,27 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
         <div className="search-page__top">
           <div className="search-page__search-field">
             <SearchBar
+              value={inputValue}
               onSearch={handleSearch}
               onBrowseSelect={handleBrowse}
+              browseSelectedId={browseOption?.id ?? null}
               placeholder={placeholder}
             />
-            <div className="search-page__genre-slot">
-              {browseOption?.id === 'genre' ? (
+            <div className="search-page__below-bar">
+              {suggestion ? (
+                <DidYouMean
+                  query={activeQuery}
+                  suggestion={suggestion}
+                  onSelect={handleSuggestionSelect}
+                />
+              ) : null}
+
+              {!suggestion && browseOption?.id === 'genre' && genreSuggestions.length > 0 ? (
                 <GenreSuggestions
                   suggestions={genreSuggestions}
                   onSelect={handleGenreSelect}
                   onAllGenres={handleAllGenres}
+                  showAllButton={genreSuggestions.length < MOVIE_GENRES.length}
                 />
               ) : null}
             </div>
@@ -170,12 +257,12 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
         <div className="search-page__results">
           {isActive ? (
             <SearchResults
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
               results={results}
               status={status}
-              query={activeQuery}
+              query={searchLabel}
+              contextLabel={contextLabel}
               errorMessage={errorMessage}
+              hideEmptyMessage={Boolean(suggestion)}
             />
           ) : null}
         </div>

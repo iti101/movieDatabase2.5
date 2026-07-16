@@ -29,7 +29,7 @@ function ChevronIcon({ open }) {
   );
 }
 
-function BrowseBy({ onSelect }) {
+function BrowseBy({ onSelect, selectedId = null }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -65,20 +65,30 @@ function BrowseBy({ onSelect }) {
 
   function handleOptionClick(option) {
     setOpen(false);
-    if (onSelect) {
-      onSelect(option);
+    if (!onSelect) {
+      return;
     }
+
+    // Clicking the active option clears the browse filter.
+    if (selectedId === option.id) {
+      onSelect(null);
+      return;
+    }
+
+    onSelect(option);
   }
 
   return (
     <div className="browse-by" ref={containerRef}>
       <button
         type="button"
-        className="browse-by__trigger"
+        className={
+          'browse-by__trigger' + (selectedId ? ' browse-by__trigger--active' : '')
+        }
         onClick={toggleMenu}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Browse by"
+        aria-label={selectedId ? `Browse by (${selectedId})` : 'Browse by'}
       >
         <ChevronIcon open={open} />
       </button>
@@ -91,8 +101,12 @@ function BrowseBy({ onSelect }) {
               <li key={option.id} role="none">
                 <button
                   type="button"
-                  className="browse-by__option"
+                  className={
+                    'browse-by__option' +
+                    (selectedId === option.id ? ' browse-by__option--selected' : '')
+                  }
                   role="menuitem"
+                  aria-current={selectedId === option.id ? 'true' : undefined}
                   onClick={() => handleOptionClick(option)}
                 >
                   {option.label}
