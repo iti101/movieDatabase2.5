@@ -38,7 +38,7 @@
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .suggest-page__subtitle {
@@ -47,22 +47,22 @@
   font-size: 0.9375rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .suggest-page__accordion {
   display: flex;
   flex-direction: column;
   width: 100%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
-  background: #ffffff;
+  background: var(--surface);
   overflow: hidden;
   text-align: left;
 }
 
 .suggest-page__accordion-item + .suggest-page__accordion-item {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
 }
 
 .suggest-page__accordion-heading {
@@ -83,18 +83,18 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text);
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
 .suggest-page__accordion-trigger:hover {
-  background: #f8fafc;
+  background: var(--surface-muted);
 }
 
 .suggest-page__accordion-item--open .suggest-page__accordion-trigger {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .suggest-page__accordion-icon {
@@ -147,13 +147,13 @@
 
 .suggest-page__media-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 9999px;
-  background: #ffffff;
+  background: var(--surface);
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -162,20 +162,20 @@
 }
 
 .suggest-page__media-btn:hover {
-  border-color: #cbd5e1;
-  color: #0f172a;
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .suggest-page__media-btn--active {
-  border-color: #0f172a;
-  background: #0f172a;
-  color: #ffffff;
+  border-color: var(--btn-bg);
+  background: var(--btn-bg);
+  color: var(--btn-text);
 }
 
 .suggest-page__media-btn--active:hover {
-  border-color: #1e293b;
-  background: #1e293b;
-  color: #ffffff;
+  border-color: var(--btn-bg-hover);
+  background: var(--btn-bg-hover);
+  color: var(--btn-text);
 }
 
 .suggest-page__actor {
@@ -193,9 +193,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.25rem 0.25rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 9999px;
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .suggest-page__actor-input {
@@ -206,12 +206,12 @@
   background: transparent;
   font-family: inherit;
   font-size: 0.9375rem;
-  color: #0f172a;
+  color: var(--text);
   outline: none;
 }
 
 .suggest-page__actor-input::placeholder {
-  color: #94a3b8;
+  color: var(--text-faint);
 }
 
 .suggest-page__actor-input::-webkit-search-cancel-button {
@@ -222,9 +222,9 @@
   list-style: none;
   margin: 0;
   padding: 0.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
-  background: #ffffff;
+  background: var(--surface);
   text-align: left;
   max-height: 14rem;
   overflow-y: auto;
@@ -242,13 +242,13 @@
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text);
   text-align: left;
   cursor: pointer;
 }
 
 .suggest-page__actor-result:hover {
-  background: #f8fafc;
+  background: var(--surface-muted);
 }
 
 .suggest-page__actor-photo {
@@ -256,7 +256,7 @@
   height: 2.25rem;
   object-fit: cover;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: var(--placeholder);
   flex-shrink: 0;
 }
 
@@ -302,10 +302,10 @@
   width: 2.75rem;
   height: 2.75rem;
   padding: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 9999px;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -314,8 +314,8 @@
 }
 
 .suggest-page__reaction:hover:not(:disabled) {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
   transform: scale(1.06);
 }
 
@@ -349,11 +349,11 @@
 .suggest-page__message {
   margin: 0;
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .suggest-page__message--error {
-  color: #b91c1c;
+  color: var(--error);
 }
 
 @media (max-width: 640px) {

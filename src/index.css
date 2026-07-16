@@ -4,12 +4,79 @@
   box-sizing: border-box;
 }
 
-:root {
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
   --page-bg-color: #ffffff;
-  --page-bg-dot: rgba(15, 23, 42, 0.10);
+  --page-bg-dot: rgba(15, 23, 42, 0.1);
   --page-bg-image: radial-gradient(circle, var(--page-bg-dot) 1px, transparent 1px);
   --page-bg-size: 10px 10px;
   --page-bg: var(--page-bg-color) var(--page-bg-image);
+
+  --text: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-hover: #f3f4f6;
+  --surface-chip: #f1f5f9;
+
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --btn-bg: #0f172a;
+  --btn-bg-hover: #1e293b;
+  --btn-text: #ffffff;
+
+  --focus-ring: #94a3b8;
+  --error: #b91c1c;
+  --accent: #01b4e4;
+  --placeholder: #e2e8f0;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 4px 12px rgba(15, 23, 42, 0.14);
+  --shadow-panel: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --page-bg-color: #0b1220;
+  --page-bg-dot: rgba(248, 250, 252, 0.08);
+  --page-bg-image: radial-gradient(circle, var(--page-bg-dot) 1px, transparent 1px);
+  --page-bg-size: 10px 10px;
+  --page-bg: var(--page-bg-color) var(--page-bg-image);
+
+  --text: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --surface: #152033;
+  --surface-muted: #1a2740;
+  --surface-hover: #243352;
+  --surface-chip: #1e2d45;
+
+  --border: #2a3a55;
+  --border-strong: #3d4f6f;
+
+  --btn-bg: #f1f5f9;
+  --btn-bg-hover: #e2e8f0;
+  --btn-text: #0b1220;
+
+  --focus-ring: #64748b;
+  --error: #f87171;
+  --accent: #38bdf8;
+  --placeholder: #243352;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-panel: 0 10px 25px rgba(0, 0, 0, 0.45);
 }
 
 html {
@@ -22,6 +89,7 @@ body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
   background: var(--page-bg);
   background-size: var(--page-bg-size);
 }

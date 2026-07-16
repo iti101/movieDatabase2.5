@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import './NavBar.css';
 
 const MENU_LINKS = [
@@ -274,26 +275,30 @@ export default function Navbar() {
             </button>
           ) : null}
 
-          <div className="navbar__account">
-            <button
-              type="button"
-              className="navbar__account-btn"
-              aria-label="Account"
-              aria-expanded={accountOpen}
-              aria-haspopup="true"
-              onClick={toggleAccount}
-            >
-              <AccountIcon />
-            </button>
+          <div className="navbar__actions">
+            <ThemeToggle />
 
-            {accountOpen && (
-              <AccountMenu
-                onClose={closeAccount}
-                onSignIn={handleSignIn}
-                onSignOut={handleSignOut}
-                isLoggedIn={isLoggedIn}
-              />
-            )}
+            <div className="navbar__account">
+              <button
+                type="button"
+                className="navbar__account-btn"
+                aria-label="Account"
+                aria-expanded={accountOpen}
+                aria-haspopup="true"
+                onClick={toggleAccount}
+              >
+                <AccountIcon />
+              </button>
+
+              {accountOpen && (
+                <AccountMenu
+                  onClose={closeAccount}
+                  onSignIn={handleSignIn}
+                  onSignOut={handleSignOut}
+                  isLoggedIn={isLoggedIn}
+                />
+              )}
+            </div>
           </div>
         </div>
       </header>
