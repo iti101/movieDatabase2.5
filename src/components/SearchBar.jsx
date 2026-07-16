@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BrowseBy from './BrowseBy';
 import PillButton from './PillButton';
 import './SearchBar.css';
@@ -21,9 +21,17 @@ function SearchBar({
   placeholder = 'Search for a movie...',
   onSearch,
   onBrowseSelect,
+  browseSelectedId = null,
   defaultValue = '',
+  value,
 }) {
-  const [query, setQuery] = useState(defaultValue);
+  const [query, setQuery] = useState(value ?? defaultValue);
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setQuery(value);
+    }
+  }, [value]);
 
   function handleInputChange(event) {
     setQuery(event.target.value);
@@ -57,9 +65,11 @@ function SearchBar({
         <PillButton type="submit" className="search-bar__submit">
           Search
         </PillButton>
-
-        {onBrowseSelect && <BrowseBy onSelect={onBrowseSelect} />}
       </div>
+
+      {onBrowseSelect && (
+        <BrowseBy onSelect={onBrowseSelect} selectedId={browseSelectedId} />
+      )}
     </form>
   );
 }

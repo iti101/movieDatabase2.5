@@ -95,6 +95,21 @@
   color: #020617;
 }
 
+.browse-by__option--selected {
+  background: #e2e8f0;
+  color: #020617;
+}
+
+.browse-by__trigger--active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.browse-by__trigger--active:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
 @media (max-width: 480px) {
   .browse-by__menu {
     right: auto;

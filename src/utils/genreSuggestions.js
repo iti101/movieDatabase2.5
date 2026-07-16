@@ -1,4 +1,4 @@
-const MOVIE_GENRES = [
+export const MOVIE_GENRES = [
   'Action',
   'Adventure',
   'Animation',
@@ -18,6 +18,10 @@ const MOVIE_GENRES = [
   'War',
   'Western',
 ];
+
+export function getAllGenres() {
+  return [...MOVIE_GENRES];
+}
 
 export function pickRandomGenres(count = 5) {
   const shuffled = [...MOVIE_GENRES];
