@@ -3,12 +3,12 @@ import './ThemeToggle.css';
 
 function SunIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" fill="currentColor" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.75" />
       <path
-        d="M12 1.75v2.5M12 19.75v2.5M1.75 12h2.5M19.75 12h2.5M4.4 4.4l1.77 1.77M17.83 17.83l1.77 1.77M4.4 19.6l1.77-1.77M17.83 6.17l1.77-1.77"
+        d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.05 5.05l1.4 1.4M17.55 17.55l1.4 1.4M5.05 18.95l1.4-1.4M17.55 6.45l1.4-1.4"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.75"
         strokeLinecap="round"
       />
     </svg>
@@ -17,47 +17,30 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M21 14.35A8.5 8.5 0 1 1 9.65 3 7 7 0 0 0 21 14.35Z"
-        fill="currentColor"
+        d="M20.5 14.2A8.2 8.2 0 1 1 9.8 3.5 6.6 6.6 0 0 0 20.5 14.2Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
 }
 
 export default function ThemeToggle() {
-  const { theme, setLight, setDark } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
-    <div className="theme-toggle" role="group" aria-label="Color theme">
-      <button
-        type="button"
-        className={
-          isDark
-            ? 'theme-toggle__btn'
-            : 'theme-toggle__btn theme-toggle__btn--active'
-        }
-        aria-label="Light mode"
-        aria-pressed={!isDark}
-        onClick={setLight}
-      >
-        <SunIcon />
-      </button>
-      <button
-        type="button"
-        className={
-          isDark
-            ? 'theme-toggle__btn theme-toggle__btn--active'
-            : 'theme-toggle__btn'
-        }
-        aria-label="Dark mode"
-        aria-pressed={isDark}
-        onClick={setDark}
-      >
-        <MoonIcon />
-      </button>
-    </div>
+    <button
+      type="button"
+      className="theme-toggle"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      onClick={toggleTheme}
+    >
+      {isDark ? <MoonIcon /> : <SunIcon />}
+    </button>
   );
 }

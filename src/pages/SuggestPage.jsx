@@ -11,7 +11,14 @@ import './SuggestPage.css';
 function SmileIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" fill="#ffffff" stroke="currentColor" strokeWidth="1.75" />
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        className="suggest-page__face-fill"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
       <circle cx="9" cy="10" r="1.1" fill="currentColor" />
       <circle cx="15" cy="10" r="1.1" fill="currentColor" />
       <path
@@ -27,7 +34,14 @@ function SmileIcon() {
 function SadIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" fill="#ffffff" stroke="currentColor" strokeWidth="1.75" />
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        className="suggest-page__face-fill"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
       <circle cx="9" cy="10" r="1.1" fill="currentColor" />
       <circle cx="15" cy="10" r="1.1" fill="currentColor" />
       <path
@@ -46,14 +60,34 @@ const MEDIA_OPTIONS = [
   { id: 'any', label: 'Surprise me' },
 ];
 
-const ACCORDION_SECTIONS = [
-  { id: 'mood', label: "I'm in the mood for…" },
-  { id: 'want', label: 'I DO want to see…' },
-  { id: 'dont', label: "I definitely DON'T want to see…" },
-  { id: 'star', label: 'Must star…' },
+const FILTER_TABS = [
+  { id: 'mood', label: 'Mood', heading: "I'm in the mood for…" },
+  { id: 'want', label: 'Want', heading: 'I DO want to see…' },
+  { id: 'dont', label: "Don't want", heading: "I definitely DON'T want to see…" },
+  { id: 'star', label: 'Must star', heading: 'Must star…' },
 ];
 
 const ACTOR_DEBOUNCE_MS = 350;
+
+function mediaTypeLabel(mediaType) {
+  if (mediaType === 'movie') {
+    return 'Movie';
+  }
+  if (mediaType === 'tv') {
+    return 'TV show';
+  }
+  return 'Surprise me';
+}
+
+function summarizeList(items, emptyLabel) {
+  if (items.length === 0) {
+    return emptyLabel;
+  }
+  if (items.length <= 2) {
+    return items.join(', ');
+  }
+  return `${items.length} selected`;
+}
 
 function buildSubtitle({ mediaType, includeGenres, excludeGenres, selectedPerson }) {
   const parts = [];
@@ -91,7 +125,7 @@ function buildSubtitle({ mediaType, includeGenres, excludeGenres, selectedPerson
 
 export default function SuggestPage({ embedded = false }) {
   const navigate = useNavigate();
-  const [openSection, setOpenSection] = useState('mood');
+  const [activeTab, setActiveTab] = useState('mood');
   const [mediaType, setMediaType] = useState('any');
   const [includeGenres, setIncludeGenres] = useState([]);
   const [excludeGenres, setExcludeGenres] = useState([]);
@@ -161,10 +195,6 @@ export default function SuggestPage({ embedded = false }) {
     setActorResults([]);
   }
 
-  function toggleSection(sectionId) {
-    setOpenSection((current) => (current === sectionId ? null : sectionId));
-  }
-
   async function handleRandomize() {
     setStatus('loading');
     setErrorMessage('');
@@ -205,6 +235,40 @@ export default function SuggestPage({ embedded = false }) {
     selectedPerson,
   });
 
+  const activeFilterTab = FILTER_TABS.find((tab) => tab.id === activeTab) ?? FILTER_TABS[0];
+
+  const tabBadges = {
+    mood: mediaTypeLabel(mediaType),
+    want: summarizeList(includeGenres, 'Any'),
+    dont: summarizeList(excludeGenres, 'None'),
+    star: selectedPerson?.title ?? 'Anyone',
+  };
+
+  function handleTabKeyDown(event) {
+    const currentIndex = FILTER_TABS.findIndex((tab) => tab.id === activeTab);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    let nextIndex = currentIndex;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % FILTER_TABS.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + FILTER_TABS.length) % FILTER_TABS.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = FILTER_TABS.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    const nextTabId = FILTER_TABS[nextIndex].id;
+    setActiveTab(nextTabId);
+    document.getElementById(`suggest-tab-${nextTabId}`)?.focus();
+  }
+
   return (
     <div className={`suggest-page${embedded ? ' suggest-page--embedded' : ''}`}>
       <div className="suggest-page__content">
@@ -213,128 +277,135 @@ export default function SuggestPage({ embedded = false }) {
           <p className="suggest-page__subtitle">{subtitle}</p>
         </div>
 
-        <div className="suggest-page__accordion" aria-label="Suggestion filters">
-          {ACCORDION_SECTIONS.map((section) => {
-            const isOpen = openSection === section.id;
-            const panelId = `suggest-panel-${section.id}`;
-            const headerId = `suggest-header-${section.id}`;
-
-            return (
-              <div
-                key={section.id}
-                className={`suggest-page__accordion-item${isOpen ? ' suggest-page__accordion-item--open' : ''}`}
-              >
-                <h2 className="suggest-page__accordion-heading">
+        <div className="suggest-page__filters">
+          <div className="suggest-page__tabs-scroll">
+            <div
+              className="suggest-page__tabs"
+              role="tablist"
+              aria-label="Suggestion filters"
+              onKeyDown={handleTabKeyDown}
+            >
+              {FILTER_TABS.map((tab) => {
+                const isActive = activeTab === tab.id;
+                let className = 'suggest-page__tab';
+                if (isActive) {
+                  className += ' suggest-page__tab--active';
+                }
+                return (
                   <button
+                    key={tab.id}
                     type="button"
-                    id={headerId}
-                    className="suggest-page__accordion-trigger"
-                    aria-expanded={isOpen}
-                    aria-controls={panelId}
-                    onClick={() => toggleSection(section.id)}
+                    role="tab"
+                    id={`suggest-tab-${tab.id}`}
+                    className={className}
+                    aria-selected={isActive}
+                    aria-controls={`suggest-panel-${tab.id}`}
+                    tabIndex={isActive ? 0 : -1}
+                    onClick={() => setActiveTab(tab.id)}
                   >
-                    <span>{section.label}</span>
-                    <span className="suggest-page__accordion-icon" aria-hidden="true" />
+                    <span className="suggest-page__tab-label">{tab.label}</span>
+                    <span className="suggest-page__tab-badge">{tabBadges[tab.id]}</span>
                   </button>
-                </h2>
+                );
+              })}
+            </div>
+          </div>
 
-                <div
-                  id={panelId}
-                  role="region"
-                  aria-labelledby={headerId}
-                  className="suggest-page__accordion-panel"
-                  hidden={!isOpen}
-                >
-                  {section.id === 'mood' ? (
-                    <div className="suggest-page__media-toggle" role="group" aria-label="Media type">
-                      {MEDIA_OPTIONS.map((option) => {
-                        let className = 'suggest-page__media-btn';
-                        if (mediaType === option.id) {
-                          className += ' suggest-page__media-btn--active';
-                        }
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={className}
-                            aria-pressed={mediaType === option.id}
-                            onClick={() => setMediaType(option.id)}
-                          >
-                            {option.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
+          <div
+            id={`suggest-panel-${activeFilterTab.id}`}
+            role="tabpanel"
+            aria-labelledby={`suggest-tab-${activeFilterTab.id}`}
+            className="suggest-page__panel"
+          >
+            <h2 className="suggest-page__panel-heading">{activeFilterTab.heading}</h2>
 
-                  {section.id === 'want' ? (
-                    <FilterChipGroup
-                      options={genreOptions}
-                      selected={includeGenres}
-                      onChange={handleIncludeChange}
-                      disabledOptions={excludeGenres}
-                      ariaLabel="Genres you want"
-                    />
-                  ) : null}
-
-                  {section.id === 'dont' ? (
-                    <FilterChipGroup
-                      options={genreOptions}
-                      selected={excludeGenres}
-                      onChange={handleExcludeChange}
-                      disabledOptions={includeGenres}
-                      ariaLabel="Genres to avoid"
-                    />
-                  ) : null}
-
-                  {section.id === 'star' ? (
-                    <div className="suggest-page__actor">
-                      <div className="suggest-page__actor-field">
-                        <input
-                          type="search"
-                          className="suggest-page__actor-input"
-                          placeholder="Actor or actress (optional)"
-                          value={actorQuery}
-                          onChange={(event) => {
-                            setActorQuery(event.target.value);
-                            if (selectedPerson) {
-                              setSelectedPerson(null);
-                            }
-                          }}
-                          aria-label="Search for an actor or actress"
-                          autoComplete="off"
-                        />
-                      </div>
-
-                      {!selectedPerson && actorResults.length > 0 ? (
-                        <ul className="suggest-page__actor-results" role="listbox">
-                          {actorResults.map((person) => (
-                            <li key={person.id}>
-                              <button
-                                type="button"
-                                className="suggest-page__actor-result"
-                                role="option"
-                                onClick={() => handleSelectPerson(person)}
-                              >
-                                <img
-                                  className="suggest-page__actor-photo"
-                                  src={person.posterUrl}
-                                  alt=""
-                                  loading="lazy"
-                                  decoding="async"
-                                />
-                                <span>{person.title}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
+            {activeFilterTab.id === 'mood' ? (
+              <div className="suggest-page__media-toggle" role="group" aria-label="Media type">
+                {MEDIA_OPTIONS.map((option) => {
+                  let className = 'suggest-page__media-btn';
+                  if (mediaType === option.id) {
+                    className += ' suggest-page__media-btn--active';
+                  }
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={className}
+                      aria-pressed={mediaType === option.id}
+                      onClick={() => setMediaType(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
+            ) : null}
+
+            {activeFilterTab.id === 'want' ? (
+              <FilterChipGroup
+                options={genreOptions}
+                selected={includeGenres}
+                onChange={handleIncludeChange}
+                disabledOptions={excludeGenres}
+                ariaLabel="Genres you want"
+              />
+            ) : null}
+
+            {activeFilterTab.id === 'dont' ? (
+              <FilterChipGroup
+                options={genreOptions}
+                selected={excludeGenres}
+                onChange={handleExcludeChange}
+                disabledOptions={includeGenres}
+                ariaLabel="Genres to avoid"
+              />
+            ) : null}
+
+            {activeFilterTab.id === 'star' ? (
+              <div className="suggest-page__actor">
+                <div className="suggest-page__actor-field">
+                  <input
+                    type="search"
+                    className="suggest-page__actor-input"
+                    placeholder="Actor or actress (optional)"
+                    value={actorQuery}
+                    onChange={(event) => {
+                      setActorQuery(event.target.value);
+                      if (selectedPerson) {
+                        setSelectedPerson(null);
+                      }
+                    }}
+                    aria-label="Search for an actor or actress"
+                    autoComplete="off"
+                  />
+                </div>
+
+                {!selectedPerson && actorResults.length > 0 ? (
+                  <ul className="suggest-page__actor-results" role="listbox">
+                    {actorResults.map((person) => (
+                      <li key={person.id}>
+                        <button
+                          type="button"
+                          className="suggest-page__actor-result"
+                          role="option"
+                          onClick={() => handleSelectPerson(person)}
+                        >
+                          <img
+                            className="suggest-page__actor-photo"
+                            src={person.posterUrl}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span>{person.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div
