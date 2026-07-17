@@ -3,8 +3,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) clamp(2rem, 5vh, 3rem);
   box-sizing: border-box;
 }
@@ -20,6 +20,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1.75rem;
+  flex: 1;
   width: 100%;
   max-width: 42rem;
   text-align: center;
@@ -55,6 +56,7 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
+  margin-top: 100px;
   text-align: left;
 }
 
@@ -63,6 +65,7 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  transform: translateY(-50px);
 }
 
 .suggest-page__tabs-scroll::-webkit-scrollbar {
@@ -281,7 +284,7 @@
   align-items: center;
   gap: 1rem;
   width: 100%;
-  margin-top: calc(0.25rem + 300px);
+  margin-top: calc(0.25rem + 150px);
   transition: margin-top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 

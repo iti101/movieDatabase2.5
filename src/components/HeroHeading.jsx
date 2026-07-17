@@ -136,19 +136,28 @@ function HeroHeading({
       {showButton ? (
         <div className="hero-heading__cta hero-heading__cta--visible">
           <PillButton onClick={onGetStarted}>Let&apos;s get started</PillButton>
-          {showArrow ? (
-            <div className="hero-heading__arrow hero-heading__arrow--visible" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 9l6 6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          ) : null}
+          <button
+            type="button"
+            className={
+              showArrow
+                ? 'hero-heading__arrow hero-heading__arrow--visible'
+                : 'hero-heading__arrow'
+            }
+            onClick={onGetStarted}
+            tabIndex={showArrow ? 0 : -1}
+            aria-label="Let's get started"
+            aria-hidden={!showArrow}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       ) : null}
     </>

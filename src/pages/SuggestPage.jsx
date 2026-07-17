@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FilterChipGroup from '../components/FilterChipGroup';
+import Footer from '../components/Footer';
 import PillButton from '../components/PillButton';
 import SearchResultCard from '../components/SearchResultCard';
 import { searchPeople } from '../services/tmdb';
@@ -463,6 +464,8 @@ export default function SuggestPage({ embedded = false }) {
           ) : null}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
