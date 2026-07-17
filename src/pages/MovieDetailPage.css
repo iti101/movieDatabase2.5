@@ -2,8 +2,9 @@
   min-height: 100vh;
   min-height: 100dvh;
   padding: clamp(4.5rem, 10vh, 6rem) clamp(1rem, 4vw, 2.5rem) 3rem;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--page-bg);
+  background-size: var(--page-bg-size);
+  color: var(--text);
 }
 
 .movie-detail__inner {
@@ -13,34 +14,63 @@
 }
 
 .movie-detail__back {
+  position: fixed;
+  top: 1.25rem;
+  left: calc(max(0px, (100vw - 1200px) / 2) + 2.5rem);
+  z-index: 105;
   display: inline-flex;
   align-items: center;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #64748b;
+  gap: 0.35rem;
+  height: 2.75rem;
+  margin: 0;
+  font-size: clamp(1.375rem, 3.5vw, 1.875rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text);
   text-decoration: none;
-  transition: color 0.15s ease;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.movie-detail__back-icon {
+  flex-shrink: 0;
+  width: 0.9em;
+  height: 0.9em;
 }
 
 .movie-detail__back:hover {
-  color: #0f172a;
+  opacity: 0.7;
 }
 
 .movie-detail__back:focus-visible {
-  outline: 2px solid #94a3b8;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .movie-detail__back {
+    top: 1rem;
+    left: calc(1rem + 1.75rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .movie-detail__back {
+    height: 2.5rem;
+    left: calc(1rem + 1.6rem);
+  }
 }
 
 .movie-detail__message {
   margin: 2rem 0 0;
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .movie-detail__message--error {
-  color: #b91c1c;
+  color: var(--error);
 }
 
 .movie-detail__hero {
@@ -54,8 +84,8 @@
   aspect-ratio: 2 / 3;
   border-radius: 0.5rem;
   overflow: hidden;
-  background: #e2e8f0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  background: var(--placeholder);
+  box-shadow: var(--shadow-md);
 }
 
 .movie-detail__poster {
@@ -70,7 +100,7 @@
   font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 600;
   line-height: 1.2;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .movie-detail__meta {
@@ -89,14 +119,14 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-faint);
 }
 
 .movie-detail__meta-item dd {
   margin: 0;
   font-size: 1rem;
   line-height: 1.45;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .movie-detail__rating {
@@ -105,17 +135,17 @@
 }
 
 .movie-detail__rating-scale {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .movie-detail__vote-count {
   margin-left: 0.35rem;
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--text-faint);
 }
 
 .movie-detail__trailer-link {
-  color: #0f172a;
+  color: var(--text);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 0.15em;
@@ -123,13 +153,33 @@
 }
 
 .movie-detail__trailer-link:hover {
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .movie-detail__trailer-link:focus-visible {
-  outline: 2px solid #94a3b8;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+.movie-detail__watchlist {
+  margin-top: 1.5rem;
+}
+
+.movie-detail__watchlist--saved {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.movie-detail__watchlist--saved:hover {
+  background: var(--surface-muted);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.movie-detail__watchlist--saved:disabled:hover {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .movie-detail__section {
@@ -140,7 +190,7 @@
   margin: 0 0 0.75rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .movie-detail__synopsis {
@@ -148,13 +198,13 @@
   max-width: 42rem;
   font-size: 1rem;
   line-height: 1.65;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .movie-detail__empty {
   margin: 0;
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .movie-detail__cast {
@@ -184,7 +234,7 @@
 }
 
 .movie-detail__cast-member:focus-visible {
-  outline: 2px solid #94a3b8;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -194,7 +244,7 @@
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--placeholder);
 }
 
 .movie-detail__cast-photo {
@@ -209,14 +259,14 @@
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.35;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .movie-detail__cast-role {
   margin: 0.15rem 0 0;
   font-size: 0.75rem;
   line-height: 1.35;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 @media (min-width: 640px) {

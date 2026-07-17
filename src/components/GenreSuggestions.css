@@ -21,7 +21,7 @@
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   transition:
     color 0.15s ease,
@@ -33,7 +33,7 @@
 
 .genre-suggestions__item:hover,
 .genre-suggestions__all:hover {
-  color: #0f172a;
+  color: var(--text);
   text-decoration-color: currentColor;
 }
 

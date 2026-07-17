@@ -1,3 +1,5 @@
+import { getGenreLabelsForMediaType } from '../services/tmdb';
+
 export const MOVIE_GENRES = [
   'Action',
   'Adventure',
@@ -20,6 +22,20 @@ export const MOVIE_GENRES = [
 ];
 
 export function getAllGenres() {
+  return [...MOVIE_GENRES];
+}
+
+/**
+ * Genre labels available for the given media preference.
+ * For "any", returns the movie list (superset of common labels).
+ */
+export function getGenresForMediaPreference(mediaPreference) {
+  if (mediaPreference === 'tv') {
+    return getGenreLabelsForMediaType('tv');
+  }
+  if (mediaPreference === 'movie') {
+    return getGenreLabelsForMediaType('movie');
+  }
   return [...MOVIE_GENRES];
 }
 

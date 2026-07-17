@@ -8,5 +8,5 @@
 .help-prompt__text {
   margin: 0;
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--text-muted);
 }

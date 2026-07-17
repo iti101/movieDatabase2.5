@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import PillButton from '../components/PillButton';
 import WatchProviders from '../components/WatchProviders';
-import { useAuth } from '../context/AuthContext';
-import { getMovieDetails } from '../services/tmdb';
-import { isInWatchlist, toggleWatchlist } from '../utils/watchlistStorage';
+import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
 function formatRating(rating) {
@@ -14,14 +11,12 @@ function formatRating(rating) {
   return rating.toFixed(1);
 }
 
-export default function MovieDetailPage() {
+export default function TvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
-  const [movie, setMovie] = useState(null);
+  const [show, setShow] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
-  const [onWatchlist, setOnWatchlist] = useState(false);
 
   function handleCastClick(member) {
     navigate(
@@ -39,39 +34,18 @@ export default function MovieDetailPage() {
     );
   }
 
-  function handleWatchlistClick() {
-    if (!movie) {
-      return;
-    }
-
-    if (!isLoggedIn) {
-      navigate(`/login?redirect=${encodeURIComponent(`/movie/${movie.id}`)}`);
-      return;
-    }
-
-    const { added } = toggleWatchlist({
-      id: movie.id,
-      title: movie.title,
-      year: movie.year,
-      posterUrl: movie.posterUrl,
-      mediaType: 'movie',
-    });
-    setOnWatchlist(added);
-  }
-
   useEffect(() => {
     let cancelled = false;
 
-    async function loadMovie() {
+    async function loadShow() {
       setStatus('loading');
       setErrorMessage('');
-      setMovie(null);
+      setShow(null);
 
       try {
-        const details = await getMovieDetails(id);
+        const details = await getTvDetails(id);
         if (!cancelled) {
-          setMovie(details);
-          setOnWatchlist(isInWatchlist(details.id, 'movie'));
+          setShow(details);
           setStatus('success');
         }
       } catch (error) {
@@ -86,17 +60,17 @@ export default function MovieDetailPage() {
       }
     }
 
-    loadMovie();
+    loadShow();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  const displayTitle = movie
-    ? movie.year
-      ? `${movie.title} (${movie.year})`
-      : movie.title
+  const displayTitle = show
+    ? show.year
+      ? `${show.title} (${show.year})`
+      : show.title
     : '';
 
   return (
@@ -104,8 +78,8 @@ export default function MovieDetailPage() {
       <div className="movie-detail__inner">
         <Link
           className="movie-detail__back"
-          to={{ pathname: '/', hash: '#search' }}
-          state={{ scrollTo: 'search' }}
+          to={{ pathname: '/', hash: '#suggest' }}
+          state={{ scrollTo: 'suggest' }}
         >
           <svg
             className="movie-detail__back-icon"
@@ -128,7 +102,7 @@ export default function MovieDetailPage() {
 
         {status === 'loading' ? (
           <p className="movie-detail__message" aria-live="polite">
-            Loading movie details…
+            Loading TV show details…
           </p>
         ) : null}
 
@@ -137,36 +111,36 @@ export default function MovieDetailPage() {
             className="movie-detail__message movie-detail__message--error"
             role="alert"
           >
-            {errorMessage || 'Could not load this movie.'}
+            {errorMessage || 'Could not load this TV show.'}
           </p>
         ) : null}
 
-        {status === 'success' && movie ? (
+        {status === 'success' && show ? (
           <article className="movie-detail__content">
             <div className="movie-detail__hero">
               <div className="movie-detail__poster-wrap">
                 <img
                   className="movie-detail__poster"
-                  src={movie.posterUrl}
+                  src={show.posterUrl}
                   alt={displayTitle}
                 />
               </div>
 
               <div className="movie-detail__header">
-                <h1 className="movie-detail__title">{movie.title}</h1>
+                <h1 className="movie-detail__title">{show.title}</h1>
 
                 <dl className="movie-detail__meta">
-                  {movie.year ? (
+                  {show.year ? (
                     <div className="movie-detail__meta-item">
-                      <dt>Year</dt>
-                      <dd>{movie.year}</dd>
+                      <dt>First aired</dt>
+                      <dd>{show.year}</dd>
                     </div>
                   ) : null}
 
-                  {movie.genres.length > 0 ? (
+                  {show.genres.length > 0 ? (
                     <div className="movie-detail__meta-item">
                       <dt>Genre</dt>
-                      <dd>{movie.genres.join(', ')}</dd>
+                      <dd>{show.genres.join(', ')}</dd>
                     </div>
                   ) : null}
 
@@ -174,31 +148,31 @@ export default function MovieDetailPage() {
                     <dt>User rating</dt>
                     <dd>
                       <span className="movie-detail__rating">
-                        {formatRating(movie.rating)}
+                        {formatRating(show.rating)}
                       </span>
                       <span className="movie-detail__rating-scale"> / 10</span>
-                      {movie.voteCount > 0 ? (
+                      {show.voteCount > 0 ? (
                         <span className="movie-detail__vote-count">
-                          ({movie.voteCount.toLocaleString()} votes)
+                          ({show.voteCount.toLocaleString()} votes)
                         </span>
                       ) : null}
                     </dd>
                   </div>
 
-                  {movie.director ? (
+                  {show.creators ? (
                     <div className="movie-detail__meta-item">
-                      <dt>Director</dt>
-                      <dd>{movie.director}</dd>
+                      <dt>Created by</dt>
+                      <dd>{show.creators}</dd>
                     </div>
                   ) : null}
 
-                  {movie.trailerUrl ? (
+                  {show.trailerUrl ? (
                     <div className="movie-detail__meta-item">
                       <dt>Trailer</dt>
                       <dd>
                         <a
                           className="movie-detail__trailer-link"
-                          href={movie.trailerUrl}
+                          href={show.trailerUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -208,17 +182,6 @@ export default function MovieDetailPage() {
                     </div>
                   ) : null}
                 </dl>
-
-                <PillButton
-                  className={
-                    onWatchlist
-                      ? 'movie-detail__watchlist movie-detail__watchlist--saved'
-                      : 'movie-detail__watchlist'
-                  }
-                  onClick={handleWatchlistClick}
-                >
-                  {onWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-                </PillButton>
               </div>
             </div>
 
@@ -227,25 +190,25 @@ export default function MovieDetailPage() {
                 Storyline
               </h2>
               <p className="movie-detail__synopsis">
-                {movie.overview || 'No synopsis available for this movie.'}
+                {show.overview || 'No synopsis available for this show.'}
               </p>
             </section>
 
-            <WatchProviders watchProviders={movie.watchProviders} />
+            <WatchProviders watchProviders={show.watchProviders} />
 
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
               </h2>
-              {movie.cast.length > 0 ? (
+              {show.cast.length > 0 ? (
                 <ul className="movie-detail__cast">
-                  {movie.cast.map((member) => (
+                  {show.cast.map((member) => (
                     <li key={member.id}>
                       <button
                         type="button"
                         className="movie-detail__cast-member"
                         onClick={() => handleCastClick(member)}
-                        aria-label={`See movies with ${member.name}`}
+                        aria-label={`See titles with ${member.name}`}
                       >
                         <div className="movie-detail__cast-photo-wrap">
                           <img
