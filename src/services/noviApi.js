@@ -291,6 +291,25 @@ export async function getReviews(userId) {
   return asArray(await noviFetch(`/api/reviews?userId=${userId}`));
 }
 
+export async function getAllReviews() {
+  return asArray(await noviFetch('/api/reviews'));
+}
+
+export async function getReviewsForTitle(tmdbId, mediaType = 'movie') {
+  const reviews = await getAllReviews();
+  return reviews
+    .filter(
+      (review) =>
+        Number(review.tmdbId) === Number(tmdbId) &&
+        review.mediaType === mediaType,
+    )
+    .sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+}
+
 export async function getReviewForTitle(userId, tmdbId, mediaType = 'movie') {
   const reviews = await getReviews(userId);
   return (
@@ -302,6 +321,10 @@ export async function getReviewForTitle(userId, tmdbId, mediaType = 'movie') {
   );
 }
 
+export async function getProfiles() {
+  return asArray(await noviFetch('/api/profiles'));
+}
+
 export async function createReview(review) {
   return noviFetch('/api/reviews', {
     method: 'POST',
@@ -310,7 +333,7 @@ export async function createReview(review) {
       tmdbId: review.tmdbId,
       mediaType: review.mediaType || 'movie',
       title: review.title,
-      rating: Number(review.rating),
+      rating: Number(review.rating ?? 8),
       content: review.content,
     }),
   });

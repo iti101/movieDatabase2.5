@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PillButton from '../components/PillButton';
 import SearchResultCard from '../components/SearchResultCard';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,7 @@ function ChevronDownIcon({ open }) {
 
 export default function WatchlistPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [lists, setLists] = useState([]);
   const [items, setItems] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -367,6 +369,20 @@ export default function WatchlistPage() {
                   </button>
                   {menuOpen ? (
                     <div className="watchlist-page__tab-menu" role="menu">
+                      <button
+                        type="button"
+                        className="watchlist-page__tab-menu-item"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpenForId(null);
+                          navigate(
+                            { pathname: '/', hash: '#search' },
+                            { state: { scrollTo: 'search' } },
+                          );
+                        }}
+                      >
+                        Add title
+                      </button>
                       <button
                         type="button"
                         className="watchlist-page__tab-menu-item"

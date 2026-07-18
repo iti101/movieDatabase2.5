@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import SearchResultCard from '../components/SearchResultCard';
+import { useMenuUi } from '../context/MenuUiContext';
 import { getPersonDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 import './PersonDetailPage.css';
@@ -25,6 +26,7 @@ function formatBirthday(dateString) {
 export default function PersonDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { menuOpen } = useMenuUi();
   const resetSearchRef = useRef(0);
   const [person, setPerson] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -91,30 +93,32 @@ export default function PersonDetailPage() {
   return (
     <main className="movie-detail person-detail">
       <div className="movie-detail__inner">
-        <Link
-          className="movie-detail__back"
-          to={{ pathname: '/', hash: '#search' }}
-          state={{ scrollTo: 'search' }}
-        >
-          <svg
-            className="movie-detail__back-icon"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
+        {!menuOpen ? (
+          <Link
+            className="movie-detail__back"
+            to={{ pathname: '/', hash: '#search' }}
+            state={{ scrollTo: 'search' }}
           >
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </Link>
+            <svg
+              className="movie-detail__back-icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M15 18l-6-6 6-6"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back
+          </Link>
+        ) : null}
 
         {status === 'loading' ? (
           <p className="movie-detail__message" role="status">

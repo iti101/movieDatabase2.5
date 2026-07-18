@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMenuUi } from '../context/MenuUiContext';
 import ThemeToggle from './ThemeToggle';
 import './NavBar.css';
 
@@ -164,17 +165,40 @@ function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, onSearchClick, onHom
   );
 }
 
+const DETAIL_MENU_PEEK_QUERY = '(max-width: 640px)';
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoggedIn, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { menuOpen, setMenuOpen } = useMenuUi();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [narrowViewport, setNarrowViewport] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia(DETAIL_MENU_PEEK_QUERY).matches
+      : false,
+  );
   const authLabel = isLoggedIn ? 'Log out' : 'Log in';
   const isDetailPage =
     location.pathname.startsWith('/movie/') ||
-    location.pathname.startsWith('/tv/');
-  const menuTucked = isDetailPage && !menuOpen;
+    location.pathname.startsWith('/tv/') ||
+    location.pathname.startsWith('/person/');
+  // On narrow detail pages the Back link needs the hamburger slot, so tuck
+  // the regular button and show the small peek control instead.
+  const menuTucked = isDetailPage && narrowViewport && !menuOpen;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DETAIL_MENU_PEEK_QUERY);
+    function handleChange(event) {
+      setNarrowViewport(event.matches);
+    }
+
+    setNarrowViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   // Stop the page from scrolling while the fullscreen menu is open
   useEffect(() => {
@@ -188,6 +212,11 @@ export default function Navbar() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  // Close the menu on route changes so page controls can render again
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname, setMenuOpen]);
 
   function toggleMenu() {
     if (menuOpen) {
@@ -278,7 +307,7 @@ export default function Navbar() {
             <MenuIcon />
           </button>
 
-          {isDetailPage ? (
+          {isDetailPage && narrowViewport ? (
             <button
               type="button"
               className={
@@ -300,32 +329,36 @@ export default function Navbar() {
             </button>
           ) : null}
 
-          <div className="navbar__actions">
-            <ThemeToggle />
+          {!menuOpen ? (
+            <div className="navbar__actions">
+              <ThemeToggle />
 
-            <div className="navbar__account">
-              <button
-                type="button"
-                className="navbar__account-btn"
-                aria-label="Account"
-                aria-expanded={accountOpen}
-                aria-haspopup="true"
-                onClick={toggleAccount}
-              >
-                <AccountIcon />
-              </button>
+              <div className="navbar__account">
+                <button
+                  type="button"
+                  className="navbar__account-btn"
+                  aria-label="Account"
+                  aria-expanded={accountOpen}
+                  aria-haspopup="true"
+                  onClick={toggleAccount}
+                >
+                  <AccountIcon />
+                </button>
 
-              {accountOpen && (
-                <AccountMenu
-                  onClose={closeAccount}
-                  onSignIn={handleSignIn}
-                  onSignOut={handleSignOut}
-                  onWatchlists={handleWatchlists}
-                  isLoggedIn={isLoggedIn}
-                />
-              )}
+                {accountOpen && (
+                  <AccountMenu
+                    onClose={closeAccount}
+                    onSignIn={handleSignIn}
+                    onSignOut={handleSignOut}
+                    onWatchlists={handleWatchlists}
+                    isLoggedIn={isLoggedIn}
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="navbar__actions" aria-hidden="true" />
+          )}
         </div>
       </header>
 

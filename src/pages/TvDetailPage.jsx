@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import TitleReviewForm from '../components/TitleReviewForm';
+import TitleReviews from '../components/TitleReviews';
 import WatchlistSaveButton from '../components/WatchlistSaveButton';
 import WatchProviders from '../components/WatchProviders';
 import { useAuth } from '../context/AuthContext';
-import { getReviewForTitle, isTitleOnWatchlist } from '../services/noviApi';
+import { useMenuUi } from '../context/MenuUiContext';
+import { isTitleOnWatchlist } from '../services/noviApi';
 import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
@@ -19,11 +20,11 @@ export default function TvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
+  const { menuOpen } = useMenuUi();
   const [show, setShow] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [onWatchlist, setOnWatchlist] = useState(false);
-  const [review, setReview] = useState(null);
 
   function handleCastClick(member) {
     navigate(`/person/${member.id}`);
@@ -31,9 +32,6 @@ export default function TvDetailPage() {
 
   function handleWatchlistChange(added) {
     setOnWatchlist(added);
-    if (!added) {
-      setReview(null);
-    }
   }
 
   useEffect(() => {
@@ -43,7 +41,6 @@ export default function TvDetailPage() {
       setStatus('loading');
       setErrorMessage('');
       setShow(null);
-      setReview(null);
 
       try {
         const details = await getTvDetails(id);
@@ -55,13 +52,9 @@ export default function TvDetailPage() {
         setStatus('success');
 
         if (isLoggedIn && user?.id) {
-          const [saved, existingReview] = await Promise.all([
-            isTitleOnWatchlist(user.id, details.id, 'tv'),
-            getReviewForTitle(user.id, details.id, 'tv'),
-          ]);
+          const saved = await isTitleOnWatchlist(user.id, details.id, 'tv');
           if (!cancelled) {
             setOnWatchlist(saved);
-            setReview(existingReview);
           }
         } else {
           setOnWatchlist(false);
@@ -94,29 +87,31 @@ export default function TvDetailPage() {
   return (
     <main className="movie-detail">
       <div className="movie-detail__inner">
-        <Link
-          className="movie-detail__back"
-          to={{ pathname: '/', hash: '#suggest' }}
-          state={{ scrollTo: 'suggest' }}
-        >
-          <svg
-            className="movie-detail__back-icon"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
+        {!menuOpen ? (
+          <Link
+            className="movie-detail__back"
+            to={{ pathname: '/', hash: '#suggest' }}
+            state={{ scrollTo: 'suggest' }}
           >
-            <path
-              d="M14 5L7 12l7 7"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </Link>
+            <svg
+              className="movie-detail__back-icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M14 5L7 12l7 7"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back
+          </Link>
+        ) : null}
 
         {status === 'loading' ? (
           <p className="movie-detail__message" aria-live="polite">
@@ -228,19 +223,12 @@ export default function TvDetailPage() {
 
             <WatchProviders watchProviders={show.watchProviders} />
 
-            {isLoggedIn ? (
-              <div className="movie-detail__section">
-                <TitleReviewForm
-                  userId={user.id}
-                  tmdbId={show.id}
-                  mediaType="tv"
-                  title={show.title}
-                  onWatchlist={onWatchlist}
-                  existingReview={review}
-                  onSaved={setReview}
-                />
-              </div>
-            ) : null}
+            <TitleReviews
+              tmdbId={show.id}
+              mediaType="tv"
+              title={show.title}
+              loginRedirect={`/tv/${show.id}`}
+            />
 
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
