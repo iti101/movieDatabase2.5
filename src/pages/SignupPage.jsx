@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
@@ -97,9 +98,7 @@ export default function SignupPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="new-password"
               placeholder="At least 6 characters"
@@ -110,9 +109,7 @@ export default function SignupPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Confirm password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="confirmPassword"
               autoComplete="new-password"
               placeholder="Repeat your password"
