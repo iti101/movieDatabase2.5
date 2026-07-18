@@ -75,11 +75,11 @@ export function getPosterUrl(path, size = POSTER_SIZE) {
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
-function getProfileUrl(path) {
+function getProfileUrl(path, size = PROFILE_SIZE) {
   if (!path) {
     return POSTER_PLACEHOLDER;
   }
-  return `https://image.tmdb.org/t/p/${PROFILE_SIZE}${path}`;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
 function getReleaseYear(dateString) {
@@ -409,6 +409,57 @@ export async function getTvDetails(tvId) {
   });
 
   return normalizeTvDetails(data);
+}
+
+const KNOWN_FOR_LIMIT = 8;
+
+function normalizePersonDetails(data) {
+  const castCredits = data.movie_credits?.cast ?? [];
+  const seenIds = new Set();
+  const knownForMovies = [...castCredits]
+    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+    .filter((credit) => {
+      if (seenIds.has(credit.id)) {
+        return false;
+      }
+      seenIds.add(credit.id);
+      return true;
+    })
+    .slice(0, KNOWN_FOR_LIMIT)
+    .map((credit) => ({
+      id: credit.id,
+      title: credit.title,
+      year: getReleaseYear(credit.release_date),
+      posterUrl: getPosterUrl(credit.poster_path),
+      character: credit.character || '',
+      mediaType: 'movie',
+    }));
+
+  return {
+    id: data.id,
+    name: data.name,
+    profileUrl: getProfileUrl(data.profile_path, DETAIL_POSTER_SIZE),
+    biography: data.biography?.trim() || '',
+    birthday: data.birthday || '',
+    placeOfBirth: data.place_of_birth?.trim() || '',
+    knownForDepartment: data.known_for_department?.trim() || '',
+    knownForMovies,
+  };
+}
+
+/**
+ * Fetches person details including movie credits for known-for titles.
+ */
+export async function getPersonDetails(personId) {
+  if (!personId) {
+    throw new Error('Person id is required.');
+  }
+
+  const data = await tmdbFetch(`/person/${personId}`, {
+    append_to_response: 'movie_credits',
+  });
+
+  return normalizePersonDetails(data);
 }
 
 function genreMapForMediaType(mediaType) {

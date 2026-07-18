@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
@@ -8,11 +9,29 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/watchlist';
+  const justRegistered = searchParams.get('registered') === '1';
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    login();
-    navigate(redirect, { replace: true });
+    setError('');
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
+
+    try {
+      await login(email, password);
+      navigate(redirect, { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Could not sign in. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleClose() {
@@ -43,8 +62,14 @@ export default function LoginPage() {
         </button>
         <h1 className="login-page__heading">Sign in</h1>
         <p className="login-page__text">
-          Sign in to access your watchlist and preferences.
+          Sign in to access your watchlists and reviews.
         </p>
+
+        {justRegistered ? (
+          <p className="login-page__success" role="status">
+            Your account has been created. Sign in to continue.
+          </p>
+        ) : null}
 
         <form className="login-page__form" onSubmit={handleSubmit}>
           <label className="login-page__field">
@@ -71,14 +96,23 @@ export default function LoginPage() {
             />
           </label>
 
-          <PillButton type="submit" className="login-page__submit">
-            Sign in
+          {error ? (
+            <p className="login-page__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <PillButton type="submit" className="login-page__submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </PillButton>
         </form>
 
         <p className="login-page__signup">
           Not a member yet?{' '}
-          <Link to="/signup" className="login-page__signup-link">
+          <Link
+            to={`/signup?redirect=${encodeURIComponent(redirect)}`}
+            className="login-page__signup-link"
+          >
             Create new account
           </Link>
         </p>
