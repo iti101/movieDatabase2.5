@@ -7,7 +7,7 @@ import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
 import { searchByBrowseMode } from '../services/tmdb';
 import { getAllGenres, MOVIE_GENRES, pickRandomGenres } from '../utils/genreSuggestions';
-import { findSearchSuggestion } from '../utils/searchSuggestion';
+import { findSearchSuggestion, getEmptySearchGuidance } from '../utils/searchSuggestion';
 import './SearchPage.css';
 
 const ACTOR_BROWSE_OPTION = { id: 'actor', label: 'Actor/Actress' };
@@ -52,7 +52,7 @@ function getSearchContextLabel(browseOption) {
     case 'genre':
       return 'genre';
     case 'actor':
-      return 'actor';
+      return 'actor/actress';
     case 'director':
       return 'director';
     case 'release-date':
@@ -220,6 +220,27 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     setGenreSuggestions(getAllGenres());
   }
 
+  function handleSearchTitlesInstead() {
+    const query = activeQuery || selectedGenre || inputValue;
+    setBrowseOption(null);
+    setSelectedGenre(null);
+    setGenreSuggestions([]);
+    setPersonId(null);
+    setSuggestion(null);
+    setErrorMessage('');
+
+    if (!query) {
+      setInputValue('');
+      setActiveQuery('');
+      setResults([]);
+      setStatus('idle');
+      return;
+    }
+
+    setInputValue(query);
+    setActiveQuery(query);
+  }
+
   function handleHelp() {
     if (onLetUsHelp) {
       onLetUsHelp();
@@ -236,6 +257,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
       : 'Search for a movie...';
 
   const contextLabel = getSearchContextLabel(browseOption);
+  const emptyGuidance = getEmptySearchGuidance(browseMode);
 
   const pageClassName = [
     'search-page',
@@ -288,6 +310,13 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
               contextLabel={contextLabel}
               errorMessage={errorMessage}
               hideEmptyMessage={Boolean(suggestion)}
+              emptyHint={emptyGuidance.hint}
+              emptyAlternativeLabel={
+                emptyGuidance.offerTitleSearch ? emptyGuidance.alternativeLabel : null
+              }
+              onEmptyAlternative={
+                emptyGuidance.offerTitleSearch ? handleSearchTitlesInstead : null
+              }
             />
           ) : null}
         </div>
