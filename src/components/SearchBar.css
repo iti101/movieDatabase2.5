@@ -1,7 +1,9 @@
 .search-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 0.5rem;
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
   width: 100%;
   max-width: 42rem;
 }
@@ -66,10 +68,6 @@
 }
 
 @media (max-width: 480px) {
-  .search-bar {
-    align-items: stretch;
-  }
-
   .search-bar__field {
     flex-wrap: wrap;
     border-radius: 1.25rem;

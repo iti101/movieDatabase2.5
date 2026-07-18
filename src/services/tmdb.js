@@ -234,26 +234,11 @@ export function resolveGenreId(genreName) {
   return entry ? entry[1] : null;
 }
 
-async function findBestPerson(query, { department } = {}) {
-  const people = await searchPeople(query);
-
-  if (people.length === 0) {
-    return null;
-  }
-
-  if (!department) {
-    return people[0];
-  }
-
-  const preferred = people.find(
-    (person) => person.knownForDepartment?.toLowerCase() === department.toLowerCase(),
+function filterPeopleByDepartment(people, department) {
+  const target = department.toLowerCase();
+  return people.filter(
+    (person) => person.knownForDepartment?.toLowerCase() === target,
   );
-
-  return preferred ?? people[0];
-}
-
-async function getPersonMovieCredits(personId) {
-  return tmdbFetch(`/person/${personId}/movie_credits`);
 }
 
 /**
@@ -261,8 +246,8 @@ async function getPersonMovieCredits(personId) {
  * Query meaning changes with browse mode:
  * - default / null: movie title
  * - genre: genre name → movies in that genre
- * - actor: person name → movies featuring that actor
- * - director: person name → movies directed by that person
+ * - actor: person name → actors/actresses only (or filmography when personId is set)
+ * - director: person name → directors only
  * - release-date: year / year range → movies from that period
  */
 export async function searchByBrowseMode(
@@ -284,6 +269,7 @@ export async function searchByBrowseMode(
     return discoverMovies({ with_genres: genreId });
   }
 
+  // Filmography path (e.g. "All movies" from a person detail page).
   if (mode === 'actor' && personId) {
     return discoverMovies({ with_cast: personId });
   }
@@ -293,37 +279,13 @@ export async function searchByBrowseMode(
   }
 
   if (mode === 'actor') {
-
-    const person = await findBestPerson(trimmed, { department: 'Acting' });
-    if (!person) {
-      return [];
-    }
-
-    return discoverMovies({ with_cast: person.id });
+    const people = await searchPeople(trimmed);
+    return filterPeopleByDepartment(people, 'Acting');
   }
 
   if (mode === 'director') {
-    const person = await findBestPerson(trimmed, { department: 'Directing' });
-    if (!person) {
-      return [];
-    }
-
-    const credits = await getPersonMovieCredits(person.id);
-    const directed = (credits.crew ?? [])
-      .filter((credit) => credit.job === 'Director')
-      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-
-    const seen = new Set();
-    return directed
-      .filter((credit) => {
-        if (seen.has(credit.id)) {
-          return false;
-        }
-        seen.add(credit.id);
-        return true;
-      })
-      .slice(0, 20)
-      .map(normalizeMovie);
+    const people = await searchPeople(trimmed);
+    return filterPeopleByDepartment(people, 'Directing');
   }
 
   if (mode === 'release-date') {

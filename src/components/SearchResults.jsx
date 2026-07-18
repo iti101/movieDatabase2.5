@@ -8,6 +8,9 @@ export default function SearchResults({
   contextLabel,
   errorMessage,
   hideEmptyMessage = false,
+  emptyHint = null,
+  emptyAlternativeLabel = null,
+  onEmptyAlternative = null,
 }) {
   const loadingMessage = contextLabel
     ? `Searching by ${contextLabel} for “${query}”…`
@@ -16,6 +19,10 @@ export default function SearchResults({
   const emptyMessage = contextLabel
     ? `No ${contextLabel} results found for “${query}”.`
     : `No results found for “${query}”.`;
+
+  const showEmpty = status === 'success' && results.length === 0;
+  const showAlternative =
+    showEmpty && emptyHint && (emptyAlternativeLabel ? Boolean(onEmptyAlternative) : true);
 
   return (
     <section className="search-results" aria-label="Search results">
@@ -30,8 +37,30 @@ export default function SearchResults({
           </p>
         ) : null}
 
-        {status === 'success' && results.length === 0 && !hideEmptyMessage ? (
-          <p className="search-results__message">{emptyMessage}</p>
+        {showEmpty ? (
+          <div className="search-results__empty">
+            {!hideEmptyMessage ? (
+              <p className="search-results__message">{emptyMessage}</p>
+            ) : null}
+
+            {showAlternative ? (
+              <p className="search-results__hint">
+                {emptyHint}
+                {emptyAlternativeLabel && onEmptyAlternative ? (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      className="search-results__alternative"
+                      onClick={onEmptyAlternative}
+                    >
+                      {emptyAlternativeLabel}
+                    </button>
+                  </>
+                ) : null}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {status === 'success' && results.length > 0 ? (
@@ -44,7 +73,6 @@ export default function SearchResults({
                   year={item.year}
                   posterUrl={item.posterUrl}
                 />
-
               </li>
             ))}
           </ul>
