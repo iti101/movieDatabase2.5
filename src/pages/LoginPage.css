@@ -102,10 +102,33 @@
   border-color: var(--focus-ring);
 }
 
+.login-page__error {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #b42318;
+}
+
+.login-page__success {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #a6d5b8;
+  border-radius: 0.5rem;
+  background: #edf8f1;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #1b5e34;
+}
+
 .login-page__submit {
   width: 100%;
   margin-top: 0.25rem;
   padding: 0.75rem 1rem;
+}
+
+.login-page__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .login-page__signup {

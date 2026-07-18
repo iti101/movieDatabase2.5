@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import Footer from '../components/Footer';
 import LandingPage from './LandingPage';
 import SearchPage from './SearchPage';
 import SuggestPage from './SuggestPage';
@@ -81,7 +82,10 @@ export default function HomePage() {
         ref={suggestSectionRef}
         className="home-scroll__section home-scroll__section--suggest"
       >
-        <SuggestPage embedded />
+        <div className="home-scroll__suggest-viewport">
+          <SuggestPage embedded />
+        </div>
+        <Footer />
       </section>
     </div>
   );

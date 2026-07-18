@@ -4,12 +4,11 @@ import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function SignupPage() {
+  const { register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/watchlist';
-  const justRegistered = searchParams.get('registered') === '1';
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,13 +20,31 @@ export default function LoginPage() {
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get('email') || '').trim();
     const password = String(formData.get('password') || '');
+    const confirmPassword = String(formData.get('confirmPassword') || '');
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      await login(email, password);
-      navigate(redirect, { replace: true });
+      await register(email, password);
+      navigate(
+        `/login?redirect=${encodeURIComponent(redirect)}&registered=1`,
+        { replace: true },
+      );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Could not sign in. Please try again.',
+        err instanceof Error
+          ? err.message
+          : 'Could not create account. Please try again.',
       );
     } finally {
       setIsSubmitting(false);
@@ -48,7 +65,7 @@ export default function LoginPage() {
         <button
           type="button"
           className="login-page__close"
-          aria-label="Close sign in"
+          aria-label="Close sign up"
           onClick={handleClose}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -60,16 +77,10 @@ export default function LoginPage() {
             />
           </svg>
         </button>
-        <h1 className="login-page__heading">Sign in</h1>
+        <h1 className="login-page__heading">Create account</h1>
         <p className="login-page__text">
-          Sign in to access your watchlists and reviews.
+          Register with your email to save watchlists and write reviews.
         </p>
-
-        {justRegistered ? (
-          <p className="login-page__success" role="status">
-            Your account has been created. Sign in to continue.
-          </p>
-        ) : null}
 
         <form className="login-page__form" onSubmit={handleSubmit}>
           <label className="login-page__field">
@@ -90,8 +101,22 @@ export default function LoginPage() {
               className="login-page__input"
               type="password"
               name="password"
-              autoComplete="current-password"
-              placeholder="Enter your password"
+              autoComplete="new-password"
+              placeholder="At least 6 characters"
+              minLength={6}
+              required
+            />
+          </label>
+
+          <label className="login-page__field">
+            <span className="login-page__label">Confirm password</span>
+            <input
+              className="login-page__input"
+              type="password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Repeat your password"
+              minLength={6}
               required
             />
           </label>
@@ -103,17 +128,17 @@ export default function LoginPage() {
           ) : null}
 
           <PillButton type="submit" className="login-page__submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? 'Creating account…' : 'Create account'}
           </PillButton>
         </form>
 
         <p className="login-page__signup">
-          Not a member yet?{' '}
+          Already have an account?{' '}
           <Link
-            to={`/signup?redirect=${encodeURIComponent(redirect)}`}
+            to={`/login?redirect=${encodeURIComponent(redirect)}`}
             className="login-page__signup-link"
           >
-            Create new account
+            Sign in
           </Link>
         </p>
 

@@ -14,9 +14,10 @@
 }
 
 .movie-detail__back {
+  /* Sit beside the regular hamburger (padding + button + gap) */
   position: fixed;
   top: 1.25rem;
-  left: calc(max(0px, (100vw - 1200px) / 2) + 2.5rem);
+  left: calc(max(0px, (100vw - 1200px) / 2) + 2.5rem + 2.75rem + 0.5rem);
   z-index: 105;
   display: inline-flex;
   align-items: center;

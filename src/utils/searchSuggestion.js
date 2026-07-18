@@ -1,6 +1,11 @@
-import { searchByBrowseMode, searchMovies, searchPeople } from '../services/tmdb';
+import { searchMovies, searchPeople } from '../services/tmdb';
 import { findClosestMatch, normalizeForCompare } from './fuzzyMatch';
 import { MOVIE_GENRES } from './genreSuggestions';
+
+const DEPARTMENT_BY_BROWSE_MODE = {
+  actor: 'Acting',
+  director: 'Directing',
+};
 
 function buildPrefixQueries(query) {
   const trimmed = query.trim();
@@ -34,18 +39,23 @@ function findGenreSuggestion(query) {
   return findClosestMatch(query, MOVIE_GENRES);
 }
 
-async function findPersonSuggestion(query) {
+async function findPersonSuggestion(query, department) {
   const trimmed = query.trim();
   const prefixes = buildPrefixQueries(trimmed);
   const candidates = new Set();
+  const target = department?.toLowerCase();
 
   for (const prefix of prefixes) {
     try {
       const people = await searchPeople(prefix);
       people.forEach((person) => {
-        if (person?.title) {
-          candidates.add(person.title);
+        if (!person?.title) {
+          return;
         }
+        if (target && person.knownForDepartment?.toLowerCase() !== target) {
+          return;
+        }
+        candidates.add(person.title);
       });
     } catch {
       // Ignore recovery failures.
@@ -94,7 +104,7 @@ export async function findSearchSuggestion(
   }
 
   if (browseMode === 'actor' || browseMode === 'director') {
-    return findPersonSuggestion(trimmed);
+    return findPersonSuggestion(trimmed, DEPARTMENT_BY_BROWSE_MODE[browseMode]);
   }
 
   if (browseMode === 'release-date') {
@@ -107,4 +117,42 @@ export async function findSearchSuggestion(
   }
 
   return findTitleSuggestion(trimmed);
+}
+
+/**
+ * Copy for empty results, including a suggested next step by browse mode.
+ */
+export function getEmptySearchGuidance(browseMode) {
+  switch (browseMode) {
+    case 'actor':
+      return {
+        hint: 'Try looking for a movie or TV show they star in.',
+        alternativeLabel: 'Search titles instead',
+        offerTitleSearch: true,
+      };
+    case 'director':
+      return {
+        hint: 'Try looking for a movie or TV show they directed.',
+        alternativeLabel: 'Search titles instead',
+        offerTitleSearch: true,
+      };
+    case 'genre':
+      return {
+        hint: 'Try searching by movie title instead.',
+        alternativeLabel: 'Search titles instead',
+        offerTitleSearch: true,
+      };
+    case 'release-date':
+      return {
+        hint: 'Try a different year, or search by movie title.',
+        alternativeLabel: 'Search titles instead',
+        offerTitleSearch: true,
+      };
+    default:
+      return {
+        hint: 'Try a different spelling, or browse by genre, actor, or director.',
+        alternativeLabel: null,
+        offerTitleSearch: false,
+      };
+  }
 }

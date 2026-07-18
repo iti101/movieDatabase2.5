@@ -31,7 +31,8 @@ function ChevronIcon({ open }) {
 
 function BrowseBy({ onSelect, selectedId = null }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
@@ -39,7 +40,9 @@ function BrowseBy({ onSelect, selectedId = null }) {
     }
 
     function handleClickOutside(event) {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      const inTrigger = triggerRef.current?.contains(event.target);
+      const inMenu = menuRef.current?.contains(event.target);
+      if (!inTrigger && !inMenu) {
         setOpen(false);
       }
     }
@@ -79,22 +82,24 @@ function BrowseBy({ onSelect, selectedId = null }) {
   }
 
   return (
-    <div className="browse-by" ref={containerRef}>
-      <button
-        type="button"
-        className={
-          'browse-by__trigger' + (selectedId ? ' browse-by__trigger--active' : '')
-        }
-        onClick={toggleMenu}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label={selectedId ? `Browse by (${selectedId})` : 'Browse by'}
-      >
-        <ChevronIcon open={open} />
-      </button>
+    <>
+      <div className="browse-by" ref={triggerRef}>
+        <button
+          type="button"
+          className={
+            'browse-by__trigger' + (selectedId ? ' browse-by__trigger--active' : '')
+          }
+          onClick={toggleMenu}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={selectedId ? `Browse by (${selectedId})` : 'Browse by'}
+        >
+          <ChevronIcon open={open} />
+        </button>
+      </div>
 
-      {open && (
-        <div className="browse-by__menu">
+      {open ? (
+        <div className="browse-by__menu" ref={menuRef}>
           <p className="browse-by__label">Browse by...:</p>
           <ul className="browse-by__options" role="menu">
             {BROWSE_OPTIONS.map((option) => (
@@ -115,8 +120,8 @@ function BrowseBy({ onSelect, selectedId = null }) {
             ))}
           </ul>
         </div>
-      )}
-    </div>
+      ) : null}
+    </>
   );
 }
 

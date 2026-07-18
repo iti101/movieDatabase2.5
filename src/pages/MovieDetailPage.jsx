@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import PillButton from '../components/PillButton';
+import TitleReviews from '../components/TitleReviews';
+import WatchlistSaveButton from '../components/WatchlistSaveButton';
 import WatchProviders from '../components/WatchProviders';
 import { useAuth } from '../context/AuthContext';
+import { useMenuUi } from '../context/MenuUiContext';
+import { isTitleOnWatchlist } from '../services/noviApi';
 import { getMovieDetails } from '../services/tmdb';
-import { isInWatchlist, toggleWatchlist } from '../utils/watchlistStorage';
 import './MovieDetailPage.css';
 
 function formatRating(rating) {
@@ -17,45 +19,18 @@ function formatRating(rating) {
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const { menuOpen } = useMenuUi();
   const [movie, setMovie] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [onWatchlist, setOnWatchlist] = useState(false);
 
   function handleCastClick(member) {
-    navigate(
-      { pathname: '/', hash: '#search' },
-      {
-        state: {
-          scrollTo: 'search',
-          resetSearch: Date.now(),
-          actorSearch: {
-            id: member.id,
-            name: member.name,
-          },
-        },
-      },
-    );
+    navigate(`/person/${member.id}`);
   }
 
-  function handleWatchlistClick() {
-    if (!movie) {
-      return;
-    }
-
-    if (!isLoggedIn) {
-      navigate(`/login?redirect=${encodeURIComponent(`/movie/${movie.id}`)}`);
-      return;
-    }
-
-    const { added } = toggleWatchlist({
-      id: movie.id,
-      title: movie.title,
-      year: movie.year,
-      posterUrl: movie.posterUrl,
-      mediaType: 'movie',
-    });
+  function handleWatchlistChange(added) {
     setOnWatchlist(added);
   }
 
@@ -69,10 +44,20 @@ export default function MovieDetailPage() {
 
       try {
         const details = await getMovieDetails(id);
-        if (!cancelled) {
-          setMovie(details);
-          setOnWatchlist(isInWatchlist(details.id, 'movie'));
-          setStatus('success');
+        if (cancelled) {
+          return;
+        }
+
+        setMovie(details);
+        setStatus('success');
+
+        if (isLoggedIn && user?.id) {
+          const saved = await isTitleOnWatchlist(user.id, details.id, 'movie');
+          if (!cancelled) {
+            setOnWatchlist(saved);
+          }
+        } else {
+          setOnWatchlist(false);
         }
       } catch (error) {
         if (!cancelled) {
@@ -91,7 +76,7 @@ export default function MovieDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isLoggedIn, user?.id]);
 
   const displayTitle = movie
     ? movie.year
@@ -102,29 +87,31 @@ export default function MovieDetailPage() {
   return (
     <main className="movie-detail">
       <div className="movie-detail__inner">
-        <Link
-          className="movie-detail__back"
-          to={{ pathname: '/', hash: '#search' }}
-          state={{ scrollTo: 'search' }}
-        >
-          <svg
-            className="movie-detail__back-icon"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
+        {!menuOpen ? (
+          <Link
+            className="movie-detail__back"
+            to={{ pathname: '/', hash: '#search' }}
+            state={{ scrollTo: 'search' }}
           >
-            <path
-              d="M14 5L7 12l7 7"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </Link>
+            <svg
+              className="movie-detail__back-icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M14 5L7 12l7 7"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back
+          </Link>
+        ) : null}
 
         {status === 'loading' ? (
           <p className="movie-detail__message" aria-live="polite">
@@ -209,16 +196,19 @@ export default function MovieDetailPage() {
                   ) : null}
                 </dl>
 
-                <PillButton
-                  className={
-                    onWatchlist
-                      ? 'movie-detail__watchlist movie-detail__watchlist--saved'
-                      : 'movie-detail__watchlist'
-                  }
-                  onClick={handleWatchlistClick}
-                >
-                  {onWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-                </PillButton>
+                <WatchlistSaveButton
+                  title={{
+                    id: movie.id,
+                    title: movie.title,
+                    year: movie.year,
+                    posterUrl: movie.posterUrl,
+                    mediaType: 'movie',
+                  }}
+                  onWatchlist={onWatchlist}
+                  onWatchlistChange={handleWatchlistChange}
+                  onError={setErrorMessage}
+                  loginRedirect={`/movie/${movie.id}`}
+                />
               </div>
             </div>
 
@@ -233,6 +223,13 @@ export default function MovieDetailPage() {
 
             <WatchProviders watchProviders={movie.watchProviders} />
 
+            <TitleReviews
+              tmdbId={movie.id}
+              mediaType="movie"
+              title={movie.title}
+              loginRedirect={`/movie/${movie.id}`}
+            />
+
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
@@ -245,7 +242,7 @@ export default function MovieDetailPage() {
                         type="button"
                         className="movie-detail__cast-member"
                         onClick={() => handleCastClick(member)}
-                        aria-label={`See movies with ${member.name}`}
+                        aria-label={`View details for ${member.name}`}
                       >
                         <div className="movie-detail__cast-photo-wrap">
                           <img

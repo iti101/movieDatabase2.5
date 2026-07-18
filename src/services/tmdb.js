@@ -75,11 +75,11 @@ export function getPosterUrl(path, size = POSTER_SIZE) {
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
-function getProfileUrl(path) {
+function getProfileUrl(path, size = PROFILE_SIZE) {
   if (!path) {
     return POSTER_PLACEHOLDER;
   }
-  return `https://image.tmdb.org/t/p/${PROFILE_SIZE}${path}`;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
 function getReleaseYear(dateString) {
@@ -411,6 +411,57 @@ export async function getTvDetails(tvId) {
   return normalizeTvDetails(data);
 }
 
+const KNOWN_FOR_LIMIT = 8;
+
+function normalizePersonDetails(data) {
+  const castCredits = data.movie_credits?.cast ?? [];
+  const seenIds = new Set();
+  const knownForMovies = [...castCredits]
+    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+    .filter((credit) => {
+      if (seenIds.has(credit.id)) {
+        return false;
+      }
+      seenIds.add(credit.id);
+      return true;
+    })
+    .slice(0, KNOWN_FOR_LIMIT)
+    .map((credit) => ({
+      id: credit.id,
+      title: credit.title,
+      year: getReleaseYear(credit.release_date),
+      posterUrl: getPosterUrl(credit.poster_path),
+      character: credit.character || '',
+      mediaType: 'movie',
+    }));
+
+  return {
+    id: data.id,
+    name: data.name,
+    profileUrl: getProfileUrl(data.profile_path, DETAIL_POSTER_SIZE),
+    biography: data.biography?.trim() || '',
+    birthday: data.birthday || '',
+    placeOfBirth: data.place_of_birth?.trim() || '',
+    knownForDepartment: data.known_for_department?.trim() || '',
+    knownForMovies,
+  };
+}
+
+/**
+ * Fetches person details including movie credits for known-for titles.
+ */
+export async function getPersonDetails(personId) {
+  if (!personId) {
+    throw new Error('Person id is required.');
+  }
+
+  const data = await tmdbFetch(`/person/${personId}`, {
+    append_to_response: 'movie_credits',
+  });
+
+  return normalizePersonDetails(data);
+}
+
 function genreMapForMediaType(mediaType) {
   return mediaType === 'tv' ? TV_GENRE_NAME_TO_ID : GENRE_NAME_TO_ID;
 }
@@ -463,26 +514,11 @@ export function getGenreLabelsForMediaType(mediaType) {
   return Object.keys(map);
 }
 
-async function findBestPerson(query, { department } = {}) {
-  const people = await searchPeople(query);
-
-  if (people.length === 0) {
-    return null;
-  }
-
-  if (!department) {
-    return people[0];
-  }
-
-  const preferred = people.find(
-    (person) => person.knownForDepartment?.toLowerCase() === department.toLowerCase(),
+function filterPeopleByDepartment(people, department) {
+  const target = department.toLowerCase();
+  return people.filter(
+    (person) => person.knownForDepartment?.toLowerCase() === target,
   );
-
-  return preferred ?? people[0];
-}
-
-async function getPersonMovieCredits(personId) {
-  return tmdbFetch(`/person/${personId}/movie_credits`);
 }
 
 /**
@@ -490,8 +526,8 @@ async function getPersonMovieCredits(personId) {
  * Query meaning changes with browse mode:
  * - default / null: movie title
  * - genre: genre name → movies in that genre
- * - actor: person name → movies featuring that actor
- * - director: person name → movies directed by that person
+ * - actor: person name → actors/actresses only (or filmography when personId is set)
+ * - director: person name → directors only
  * - release-date: year / year range → movies from that period
  */
 export async function searchByBrowseMode(
@@ -513,6 +549,7 @@ export async function searchByBrowseMode(
     return discoverMovies({ with_genres: genreId });
   }
 
+  // Filmography path (e.g. "All movies" from a person detail page).
   if (mode === 'actor' && personId) {
     return discoverMovies({ with_cast: personId });
   }
@@ -522,37 +559,13 @@ export async function searchByBrowseMode(
   }
 
   if (mode === 'actor') {
-
-    const person = await findBestPerson(trimmed, { department: 'Acting' });
-    if (!person) {
-      return [];
-    }
-
-    return discoverMovies({ with_cast: person.id });
+    const people = await searchPeople(trimmed);
+    return filterPeopleByDepartment(people, 'Acting');
   }
 
   if (mode === 'director') {
-    const person = await findBestPerson(trimmed, { department: 'Directing' });
-    if (!person) {
-      return [];
-    }
-
-    const credits = await getPersonMovieCredits(person.id);
-    const directed = (credits.crew ?? [])
-      .filter((credit) => credit.job === 'Director')
-      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-
-    const seen = new Set();
-    return directed
-      .filter((credit) => {
-        if (seen.has(credit.id)) {
-          return false;
-        }
-        seen.add(credit.id);
-        return true;
-      })
-      .slice(0, 20)
-      .map(normalizeMovie);
+    const people = await searchPeople(trimmed);
+    return filterPeopleByDepartment(people, 'Directing');
   }
 
   if (mode === 'release-date') {

@@ -124,6 +124,19 @@ function buildSubtitle({ mediaType, includeGenres, excludeGenres, selectedPerson
   return `Looking for ${parts.join(', ')}. Hit Randomize whenever you’re ready.`;
 }
 
+function countActiveFilters({ mediaType, includeGenres, excludeGenres, selectedPerson }) {
+  let count = 0;
+  if (mediaType !== 'any') {
+    count += 1;
+  }
+  count += includeGenres.length;
+  count += excludeGenres.length;
+  if (selectedPerson) {
+    count += 1;
+  }
+  return count;
+}
+
 export default function SuggestPage({ embedded = false }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('mood');
@@ -136,6 +149,8 @@ export default function SuggestPage({ embedded = false }) {
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [result, setResult] = useState(null);
+  const [fallbackMessage, setFallbackMessage] = useState('');
+  const [filtersAccordionOpen, setFiltersAccordionOpen] = useState(true);
 
   const genreOptions = useMemo(
     () => getGenresForMediaPreference(mediaType),
@@ -199,18 +214,22 @@ export default function SuggestPage({ embedded = false }) {
   async function handleRandomize() {
     setStatus('loading');
     setErrorMessage('');
+    setFallbackMessage('');
 
     try {
-      const pick = await randomizeSuggestion({
+      const { item, fallbackMessage: note } = await randomizeSuggestion({
         mediaType,
         includeGenres,
         excludeGenres,
         personId: selectedPerson?.id ?? null,
+        personName: selectedPerson?.title ?? null,
       });
-      setResult(pick);
+      setResult(item);
+      setFallbackMessage(note ?? '');
       setStatus('idle');
     } catch (error) {
       setResult(null);
+      setFallbackMessage('');
       setStatus('error');
       setErrorMessage(
         error instanceof Error
@@ -244,6 +263,40 @@ export default function SuggestPage({ embedded = false }) {
     dont: summarizeList(excludeGenres, 'None'),
     star: selectedPerson?.title ?? 'Anyone',
   };
+
+  const activeFilterCount = countActiveFilters({
+    mediaType,
+    includeGenres,
+    excludeGenres,
+    selectedPerson,
+  });
+
+  const filterSummaryRows = [
+    {
+      id: 'mood',
+      label: 'Mood',
+      value: mediaTypeLabel(mediaType),
+      filled: mediaType !== 'any',
+    },
+    {
+      id: 'want',
+      label: 'Want',
+      value: includeGenres.length > 0 ? includeGenres.join(', ') : 'Any genre',
+      filled: includeGenres.length > 0,
+    },
+    {
+      id: 'dont',
+      label: "Don't want",
+      value: excludeGenres.length > 0 ? excludeGenres.join(', ') : 'Nothing excluded',
+      filled: excludeGenres.length > 0,
+    },
+    {
+      id: 'star',
+      label: 'Must star',
+      value: selectedPerson?.title ?? 'Anyone',
+      filled: Boolean(selectedPerson),
+    },
+  ];
 
   function handleTabKeyDown(event) {
     const currentIndex = FILTER_TABS.findIndex((tab) => tab.id === activeTab);
@@ -312,14 +365,14 @@ export default function SuggestPage({ embedded = false }) {
             </div>
           </div>
 
+          <h2 className="suggest-page__panel-heading">{activeFilterTab.heading}</h2>
+
           <div
             id={`suggest-panel-${activeFilterTab.id}`}
             role="tabpanel"
             aria-labelledby={`suggest-tab-${activeFilterTab.id}`}
             className="suggest-page__panel"
           >
-            <h2 className="suggest-page__panel-heading">{activeFilterTab.heading}</h2>
-
             {activeFilterTab.id === 'mood' ? (
               <div className="suggest-page__media-toggle" role="group" aria-label="Media type">
                 {MEDIA_OPTIONS.map((option) => {
@@ -407,6 +460,62 @@ export default function SuggestPage({ embedded = false }) {
               </div>
             ) : null}
           </div>
+
+          <div className="suggest-page__filter-summary">
+            <button
+              type="button"
+              className="suggest-page__filter-summary-toggle"
+              aria-expanded={filtersAccordionOpen}
+              aria-controls="suggest-filter-summary-panel"
+              id="suggest-filter-summary-toggle"
+              onClick={() => setFiltersAccordionOpen((open) => !open)}
+            >
+              <span className="suggest-page__filter-summary-title">
+                Selected filters
+                <span className="suggest-page__filter-summary-count">
+                  {activeFilterCount === 0
+                    ? ' · defaults'
+                    : ` · ${activeFilterCount} set`}
+                </span>
+              </span>
+              <span
+                className={
+                  filtersAccordionOpen
+                    ? 'suggest-page__filter-summary-chevron suggest-page__filter-summary-chevron--open'
+                    : 'suggest-page__filter-summary-chevron'
+                }
+                aria-hidden="true"
+              />
+            </button>
+
+            {filtersAccordionOpen ? (
+              <div
+                id="suggest-filter-summary-panel"
+                role="region"
+                aria-labelledby="suggest-filter-summary-toggle"
+                className="suggest-page__filter-summary-panel"
+              >
+                <p className="suggest-page__filter-summary-hint">
+                  The randomizer will pick from titles matching these filters.
+                </p>
+                <dl className="suggest-page__filter-summary-list">
+                  {filterSummaryRows.map((row) => (
+                    <div
+                      key={row.id}
+                      className={
+                        row.filled
+                          ? 'suggest-page__filter-summary-row suggest-page__filter-summary-row--filled'
+                          : 'suggest-page__filter-summary-row'
+                      }
+                    >
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div
@@ -427,6 +536,12 @@ export default function SuggestPage({ embedded = false }) {
           {status === 'error' && errorMessage ? (
             <p className="suggest-page__message suggest-page__message--error" role="alert">
               {errorMessage}
+            </p>
+          ) : null}
+
+          {result && fallbackMessage ? (
+            <p className="suggest-page__message suggest-page__message--fallback" role="status">
+              {fallbackMessage}
             </p>
           ) : null}
 
@@ -465,7 +580,7 @@ export default function SuggestPage({ embedded = false }) {
         </div>
       </div>
 
-      <Footer />
+      {!embedded ? <Footer /> : null}
     </div>
   );
 }

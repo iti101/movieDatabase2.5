@@ -1,0 +1,129 @@
+{
+  "collections": [
+    {
+      "name": "profiles",
+      "fields": [
+        { "name": "id", "type": "number", "required": true },
+        { "name": "userId", "type": "reference:users", "required": true },
+        { "name": "displayName", "type": "string", "required": true, "min": 2, "max": 50 }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    },
+    {
+      "name": "watchlists",
+      "fields": [
+        { "name": "id", "type": "number", "required": true },
+        { "name": "userId", "type": "reference:users", "required": true },
+        { "name": "name", "type": "string", "required": true, "min": 1, "max": 80 },
+        { "name": "description", "type": "string", "required": false, "max": 300 },
+        { "name": "createdAt", "type": "date", "required": false, "default": "CurrentDate" }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    },
+    {
+      "name": "watchlistItems",
+      "fields": [
+        { "name": "id", "type": "number", "required": true },
+        { "name": "watchlistId", "type": "reference:watchlists", "required": true },
+        { "name": "tmdbId", "type": "number", "required": true },
+        { "name": "mediaType", "type": "string", "required": true, "min": 2, "max": 10 },
+        { "name": "title", "type": "string", "required": true, "min": 1, "max": 200 },
+        { "name": "posterUrl", "type": "string", "required": false, "max": 500 },
+        { "name": "year", "type": "string", "required": false, "max": 10 },
+        { "name": "addedAt", "type": "date", "required": false, "default": "CurrentDate" }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    },
+    {
+      "name": "reviews",
+      "fields": [
+        { "name": "id", "type": "number", "required": true },
+        { "name": "userId", "type": "reference:users", "required": true },
+        { "name": "tmdbId", "type": "number", "required": true },
+        { "name": "mediaType", "type": "string", "required": true, "min": 2, "max": 10 },
+        { "name": "title", "type": "string", "required": true, "min": 1, "max": 200 },
+        { "name": "rating", "type": "number", "required": true, "min": 1, "max": 10 },
+        { "name": "content", "type": "string", "required": true, "min": 1, "max": 2000 },
+        { "name": "createdAt", "type": "date", "required": false, "default": "CurrentDate" }
+      ],
+      "permissions": {
+        "GET": ["user", "admin"],
+        "POST": ["user", "admin"],
+        "PUT": ["user", "admin"],
+        "PATCH": ["user", "admin"],
+        "DELETE": ["user", "admin"]
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@moviedb.test",
+      "password": "admin123",
+      "roles": ["admin"]
+    },
+    {
+      "id": 2,
+      "email": "demo@moviedb.test",
+      "password": "demo123",
+      "roles": ["user"]
+    }
+  ],
+  "data": {
+    "profiles": [
+      { "id": 1, "userId": 1, "displayName": "Admin" },
+      { "id": 2, "userId": 2, "displayName": "Demo User" }
+    ],
+    "watchlists": [
+      {
+        "id": 1,
+        "userId": 2,
+        "name": "Favourites",
+        "description": "Movies and shows I want to watch",
+        "createdAt": "2026-07-01"
+      }
+    ],
+    "watchlistItems": [
+      {
+        "id": 1,
+        "watchlistId": 1,
+        "tmdbId": 550,
+        "mediaType": "movie",
+        "title": "Fight Club",
+        "posterUrl": "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+        "year": "1999",
+        "addedAt": "2026-07-02"
+      }
+    ],
+    "reviews": [
+      {
+        "id": 1,
+        "userId": 2,
+        "tmdbId": 550,
+        "mediaType": "movie",
+        "title": "Fight Club",
+        "rating": 9,
+        "content": "A sharp, chaotic classic.",
+        "createdAt": "2026-07-03"
+      }
+    ]
+  }
+}

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import TitleReviews from '../components/TitleReviews';
+import WatchlistSaveButton from '../components/WatchlistSaveButton';
 import WatchProviders from '../components/WatchProviders';
+import { useAuth } from '../context/AuthContext';
+import { useMenuUi } from '../context/MenuUiContext';
+import { isTitleOnWatchlist } from '../services/noviApi';
 import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
@@ -14,24 +19,19 @@ function formatRating(rating) {
 export default function TvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuth();
+  const { menuOpen } = useMenuUi();
   const [show, setShow] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [onWatchlist, setOnWatchlist] = useState(false);
 
   function handleCastClick(member) {
-    navigate(
-      { pathname: '/', hash: '#search' },
-      {
-        state: {
-          scrollTo: 'search',
-          resetSearch: Date.now(),
-          actorSearch: {
-            id: member.id,
-            name: member.name,
-          },
-        },
-      },
-    );
+    navigate(`/person/${member.id}`);
+  }
+
+  function handleWatchlistChange(added) {
+    setOnWatchlist(added);
   }
 
   useEffect(() => {
@@ -44,9 +44,20 @@ export default function TvDetailPage() {
 
       try {
         const details = await getTvDetails(id);
-        if (!cancelled) {
-          setShow(details);
-          setStatus('success');
+        if (cancelled) {
+          return;
+        }
+
+        setShow(details);
+        setStatus('success');
+
+        if (isLoggedIn && user?.id) {
+          const saved = await isTitleOnWatchlist(user.id, details.id, 'tv');
+          if (!cancelled) {
+            setOnWatchlist(saved);
+          }
+        } else {
+          setOnWatchlist(false);
         }
       } catch (error) {
         if (!cancelled) {
@@ -65,7 +76,7 @@ export default function TvDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isLoggedIn, user?.id]);
 
   const displayTitle = show
     ? show.year
@@ -76,29 +87,31 @@ export default function TvDetailPage() {
   return (
     <main className="movie-detail">
       <div className="movie-detail__inner">
-        <Link
-          className="movie-detail__back"
-          to={{ pathname: '/', hash: '#suggest' }}
-          state={{ scrollTo: 'suggest' }}
-        >
-          <svg
-            className="movie-detail__back-icon"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
+        {!menuOpen ? (
+          <Link
+            className="movie-detail__back"
+            to={{ pathname: '/', hash: '#suggest' }}
+            state={{ scrollTo: 'suggest' }}
           >
-            <path
-              d="M14 5L7 12l7 7"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </Link>
+            <svg
+              className="movie-detail__back-icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M14 5L7 12l7 7"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back
+          </Link>
+        ) : null}
 
         {status === 'loading' ? (
           <p className="movie-detail__message" aria-live="polite">
@@ -182,6 +195,20 @@ export default function TvDetailPage() {
                     </div>
                   ) : null}
                 </dl>
+
+                <WatchlistSaveButton
+                  title={{
+                    id: show.id,
+                    title: show.title,
+                    year: show.year,
+                    posterUrl: show.posterUrl,
+                    mediaType: 'tv',
+                  }}
+                  onWatchlist={onWatchlist}
+                  onWatchlistChange={handleWatchlistChange}
+                  onError={setErrorMessage}
+                  loginRedirect={`/tv/${show.id}`}
+                />
               </div>
             </div>
 
@@ -196,6 +223,13 @@ export default function TvDetailPage() {
 
             <WatchProviders watchProviders={show.watchProviders} />
 
+            <TitleReviews
+              tmdbId={show.id}
+              mediaType="tv"
+              title={show.title}
+              loginRedirect={`/tv/${show.id}`}
+            />
+
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
@@ -208,7 +242,7 @@ export default function TvDetailPage() {
                         type="button"
                         className="movie-detail__cast-member"
                         onClick={() => handleCastClick(member)}
-                        aria-label={`See titles with ${member.name}`}
+                        aria-label={`View details for ${member.name}`}
                       >
                         <div className="movie-detail__cast-photo-wrap">
                           <img

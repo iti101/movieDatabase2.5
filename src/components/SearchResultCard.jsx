@@ -10,7 +10,12 @@ export default function SearchResultCard({
   asLink = true,
 }) {
   const displayTitle = year ? `${title} (${year})` : title;
-  const detailPath = mediaType === 'tv' ? `/tv/${id}` : `/movie/${id}`;
+  const detailPath =
+    mediaType === 'person'
+      ? `/person/${id}`
+      : mediaType === 'tv'
+        ? `/tv/${id}`
+        : `/movie/${id}`;
 
   const content = (
     <>

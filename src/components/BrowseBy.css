@@ -1,7 +1,7 @@
 .browse-by {
-  position: relative;
   display: inline-flex;
   flex-shrink: 0;
+  align-self: center;
 }
 
 .browse-by__trigger {
@@ -42,9 +42,8 @@
 }
 
 .browse-by__menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  grid-column: 1 / -1;
+  justify-self: end;
   z-index: 10;
   min-width: 11rem;
   padding: 0.375rem;
@@ -52,6 +51,7 @@
   border-radius: 0.625rem;
   background: var(--surface);
   box-shadow: var(--shadow-lg);
+  animation: browse-by-menu-in 0.2s ease;
 }
 
 .browse-by__label {
@@ -110,11 +110,21 @@
   color: var(--btn-text);
 }
 
+@keyframes browse-by-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 480px) {
   .browse-by__menu {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    justify-self: center;
     min-width: min(12rem, calc(100vw - 2rem));
   }
 }
@@ -122,5 +132,9 @@
 @media (prefers-reduced-motion: reduce) {
   .browse-by__trigger:hover {
     transform: none;
+  }
+
+  .browse-by__menu {
+    animation: none;
   }
 }
