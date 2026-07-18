@@ -264,6 +264,13 @@ export default function SuggestPage({ embedded = false }) {
     star: selectedPerson?.title ?? 'Anyone',
   };
 
+  const tabFilled = {
+    mood: mediaType !== 'any',
+    want: includeGenres.length > 0,
+    dont: excludeGenres.length > 0,
+    star: Boolean(selectedPerson),
+  };
+
   const activeFilterCount = countActiveFilters({
     mediaType,
     includeGenres,
@@ -341,9 +348,13 @@ export default function SuggestPage({ embedded = false }) {
             >
               {FILTER_TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
+                const isSet = tabFilled[tab.id];
                 let className = 'suggest-page__tab';
                 if (isActive) {
                   className += ' suggest-page__tab--active';
+                }
+                if (isSet) {
+                  className += ' suggest-page__tab--set';
                 }
                 return (
                   <button
