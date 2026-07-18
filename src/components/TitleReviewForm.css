@@ -1,0 +1,81 @@
+.title-review {
+  margin-top: 0.5rem;
+}
+
+.title-review__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.title-review__hint,
+.title-review__error,
+.title-review__status {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.title-review__hint {
+  color: var(--text-muted);
+}
+
+.title-review__error {
+  color: #b42318;
+}
+
+.title-review__status {
+  color: var(--text-secondary);
+}
+
+.title-review__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  max-width: 28rem;
+}
+
+.title-review__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.title-review__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.title-review__input,
+.title-review__textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  outline: none;
+}
+
+.title-review__input:focus,
+.title-review__textarea:focus {
+  border-color: var(--focus-ring);
+}
+
+.title-review__textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.title-review__submit {
+  align-self: flex-start;
+}
+
+.title-review__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

@@ -35,7 +35,7 @@ function AccountIcon() {
   );
 }
 
-function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
+function AccountMenu({ onClose, onSignIn, onSignOut, onWatchlists, isLoggedIn }) {
   return (
     <>
       <button
@@ -44,19 +44,39 @@ function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
         aria-label="Close account menu"
         onClick={onClose}
       />
-      <div className="navbar__account-panel" role="dialog" aria-label="Account">
-        <p className="navbar__account-heading">Your account</p>
+      <div
+        className={
+          isLoggedIn
+            ? 'navbar__account-panel navbar__account-panel--menu'
+            : 'navbar__account-panel'
+        }
+        role={isLoggedIn ? 'menu' : 'dialog'}
+        aria-label="Account"
+      >
         {isLoggedIn ? (
-          <>
-            <p className="navbar__account-text">You are signed in.</p>
-            <button type="button" className="navbar__account-signin" onClick={onSignOut}>
-              Log out
+          <div className="navbar__account-menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="navbar__account-menu-item"
+              onClick={onWatchlists}
+            >
+              My Watchlists
             </button>
-          </>
+            <button
+              type="button"
+              role="menuitem"
+              className="navbar__account-menu-item"
+              onClick={onSignOut}
+            >
+              Sign out
+            </button>
+          </div>
         ) : (
           <>
+            <p className="navbar__account-heading">Your account</p>
             <p className="navbar__account-text">
-              Sign in to access your watchlist and preferences.
+              Sign in to access your watchlists and reviews.
             </p>
             <button type="button" className="navbar__account-signin" onClick={onSignIn}>
               Sign in
@@ -200,6 +220,11 @@ export default function Navbar() {
     navigate('/login');
   }
 
+  function handleWatchlists() {
+    setAccountOpen(false);
+    navigate('/watchlist');
+  }
+
   function handleSignOut() {
     logout();
     setAccountOpen(false);
@@ -295,6 +320,7 @@ export default function Navbar() {
                   onClose={closeAccount}
                   onSignIn={handleSignIn}
                   onSignOut={handleSignOut}
+                  onWatchlists={handleWatchlists}
                   isLoggedIn={isLoggedIn}
                 />
               )}

@@ -51,11 +51,28 @@ html.home-page-active #root {
 }
 
 .home-scroll__section--suggest {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   background: var(--page-bg);
   background-size: var(--page-bg-size);
-  padding: 0;
-  align-items: stretch;
-  overflow-y: auto;
+  padding: 0 0 clamp(1.5rem, 4vh, 2.5rem);
+  overflow: visible;
+}
+
+.home-scroll__suggest-viewport {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 640px) {

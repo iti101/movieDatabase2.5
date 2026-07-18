@@ -465,7 +465,7 @@ export default function SuggestPage({ embedded = false }) {
         </div>
       </div>
 
-      <Footer />
+      {!embedded ? <Footer /> : null}
     </div>
   );
 }

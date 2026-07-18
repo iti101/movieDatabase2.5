@@ -47,7 +47,7 @@
 
 .search-page--active .search-page__content {
   justify-content: stretch;
-  max-width: 48rem;
+  max-width: 72rem;
   height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;

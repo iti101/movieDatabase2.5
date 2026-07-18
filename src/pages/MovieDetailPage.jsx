@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import PillButton from '../components/PillButton';
+import TitleReviewForm from '../components/TitleReviewForm';
+import WatchlistSaveButton from '../components/WatchlistSaveButton';
 import WatchProviders from '../components/WatchProviders';
 import { useAuth } from '../context/AuthContext';
+import { getReviewForTitle, isTitleOnWatchlist } from '../services/noviApi';
 import { getMovieDetails } from '../services/tmdb';
-import { isInWatchlist, toggleWatchlist } from '../utils/watchlistStorage';
 import './MovieDetailPage.css';
 
 function formatRating(rating) {
@@ -17,46 +18,22 @@ function formatRating(rating) {
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [movie, setMovie] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [onWatchlist, setOnWatchlist] = useState(false);
+  const [review, setReview] = useState(null);
 
   function handleCastClick(member) {
-    navigate(
-      { pathname: '/', hash: '#search' },
-      {
-        state: {
-          scrollTo: 'search',
-          resetSearch: Date.now(),
-          actorSearch: {
-            id: member.id,
-            name: member.name,
-          },
-        },
-      },
-    );
+    navigate(`/person/${member.id}`);
   }
 
-  function handleWatchlistClick() {
-    if (!movie) {
-      return;
-    }
-
-    if (!isLoggedIn) {
-      navigate(`/login?redirect=${encodeURIComponent(`/movie/${movie.id}`)}`);
-      return;
-    }
-
-    const { added } = toggleWatchlist({
-      id: movie.id,
-      title: movie.title,
-      year: movie.year,
-      posterUrl: movie.posterUrl,
-      mediaType: 'movie',
-    });
+  function handleWatchlistChange(added) {
     setOnWatchlist(added);
+    if (!added) {
+      setReview(null);
+    }
   }
 
   useEffect(() => {
@@ -66,13 +43,28 @@ export default function MovieDetailPage() {
       setStatus('loading');
       setErrorMessage('');
       setMovie(null);
+      setReview(null);
 
       try {
         const details = await getMovieDetails(id);
-        if (!cancelled) {
-          setMovie(details);
-          setOnWatchlist(isInWatchlist(details.id, 'movie'));
-          setStatus('success');
+        if (cancelled) {
+          return;
+        }
+
+        setMovie(details);
+        setStatus('success');
+
+        if (isLoggedIn && user?.id) {
+          const [saved, existingReview] = await Promise.all([
+            isTitleOnWatchlist(user.id, details.id, 'movie'),
+            getReviewForTitle(user.id, details.id, 'movie'),
+          ]);
+          if (!cancelled) {
+            setOnWatchlist(saved);
+            setReview(existingReview);
+          }
+        } else {
+          setOnWatchlist(false);
         }
       } catch (error) {
         if (!cancelled) {
@@ -91,7 +83,7 @@ export default function MovieDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isLoggedIn, user?.id]);
 
   const displayTitle = movie
     ? movie.year
@@ -209,16 +201,19 @@ export default function MovieDetailPage() {
                   ) : null}
                 </dl>
 
-                <PillButton
-                  className={
-                    onWatchlist
-                      ? 'movie-detail__watchlist movie-detail__watchlist--saved'
-                      : 'movie-detail__watchlist'
-                  }
-                  onClick={handleWatchlistClick}
-                >
-                  {onWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-                </PillButton>
+                <WatchlistSaveButton
+                  title={{
+                    id: movie.id,
+                    title: movie.title,
+                    year: movie.year,
+                    posterUrl: movie.posterUrl,
+                    mediaType: 'movie',
+                  }}
+                  onWatchlist={onWatchlist}
+                  onWatchlistChange={handleWatchlistChange}
+                  onError={setErrorMessage}
+                  loginRedirect={`/movie/${movie.id}`}
+                />
               </div>
             </div>
 
@@ -233,6 +228,20 @@ export default function MovieDetailPage() {
 
             <WatchProviders watchProviders={movie.watchProviders} />
 
+            {isLoggedIn ? (
+              <div className="movie-detail__section">
+                <TitleReviewForm
+                  userId={user.id}
+                  tmdbId={movie.id}
+                  mediaType="movie"
+                  title={movie.title}
+                  onWatchlist={onWatchlist}
+                  existingReview={review}
+                  onSaved={setReview}
+                />
+              </div>
+            ) : null}
+
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
@@ -245,7 +254,7 @@ export default function MovieDetailPage() {
                         type="button"
                         className="movie-detail__cast-member"
                         onClick={() => handleCastClick(member)}
-                        aria-label={`See movies with ${member.name}`}
+                        aria-label={`View details for ${member.name}`}
                       >
                         <div className="movie-detail__cast-photo-wrap">
                           <img

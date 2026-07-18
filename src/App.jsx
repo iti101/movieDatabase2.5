@@ -5,8 +5,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import WatchlistPage from './pages/WatchlistPage';
 import MovieDetailPage from './pages/MovieDetailPage';
+import PersonDetailPage from './pages/PersonDetailPage';
 import TvDetailPage from './pages/TvDetailPage';
 
 function AppRoutes() {
@@ -36,7 +38,9 @@ function AppRoutes() {
       />
       <Route path="/movie/:id" element={<MovieDetailPage />} />
       <Route path="/tv/:id" element={<TvDetailPage />} />
+      <Route path="/person/:id" element={<PersonDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         path="/watchlist"
         element={

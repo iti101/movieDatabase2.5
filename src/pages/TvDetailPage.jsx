@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import TitleReviewForm from '../components/TitleReviewForm';
+import WatchlistSaveButton from '../components/WatchlistSaveButton';
 import WatchProviders from '../components/WatchProviders';
+import { useAuth } from '../context/AuthContext';
+import { getReviewForTitle, isTitleOnWatchlist } from '../services/noviApi';
 import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
@@ -14,24 +18,22 @@ function formatRating(rating) {
 export default function TvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuth();
   const [show, setShow] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [onWatchlist, setOnWatchlist] = useState(false);
+  const [review, setReview] = useState(null);
 
   function handleCastClick(member) {
-    navigate(
-      { pathname: '/', hash: '#search' },
-      {
-        state: {
-          scrollTo: 'search',
-          resetSearch: Date.now(),
-          actorSearch: {
-            id: member.id,
-            name: member.name,
-          },
-        },
-      },
-    );
+    navigate(`/person/${member.id}`);
+  }
+
+  function handleWatchlistChange(added) {
+    setOnWatchlist(added);
+    if (!added) {
+      setReview(null);
+    }
   }
 
   useEffect(() => {
@@ -41,12 +43,28 @@ export default function TvDetailPage() {
       setStatus('loading');
       setErrorMessage('');
       setShow(null);
+      setReview(null);
 
       try {
         const details = await getTvDetails(id);
-        if (!cancelled) {
-          setShow(details);
-          setStatus('success');
+        if (cancelled) {
+          return;
+        }
+
+        setShow(details);
+        setStatus('success');
+
+        if (isLoggedIn && user?.id) {
+          const [saved, existingReview] = await Promise.all([
+            isTitleOnWatchlist(user.id, details.id, 'tv'),
+            getReviewForTitle(user.id, details.id, 'tv'),
+          ]);
+          if (!cancelled) {
+            setOnWatchlist(saved);
+            setReview(existingReview);
+          }
+        } else {
+          setOnWatchlist(false);
         }
       } catch (error) {
         if (!cancelled) {
@@ -65,7 +83,7 @@ export default function TvDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isLoggedIn, user?.id]);
 
   const displayTitle = show
     ? show.year
@@ -182,6 +200,20 @@ export default function TvDetailPage() {
                     </div>
                   ) : null}
                 </dl>
+
+                <WatchlistSaveButton
+                  title={{
+                    id: show.id,
+                    title: show.title,
+                    year: show.year,
+                    posterUrl: show.posterUrl,
+                    mediaType: 'tv',
+                  }}
+                  onWatchlist={onWatchlist}
+                  onWatchlistChange={handleWatchlistChange}
+                  onError={setErrorMessage}
+                  loginRedirect={`/tv/${show.id}`}
+                />
               </div>
             </div>
 
@@ -196,6 +228,20 @@ export default function TvDetailPage() {
 
             <WatchProviders watchProviders={show.watchProviders} />
 
+            {isLoggedIn ? (
+              <div className="movie-detail__section">
+                <TitleReviewForm
+                  userId={user.id}
+                  tmdbId={show.id}
+                  mediaType="tv"
+                  title={show.title}
+                  onWatchlist={onWatchlist}
+                  existingReview={review}
+                  onSaved={setReview}
+                />
+              </div>
+            ) : null}
+
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
@@ -208,7 +254,7 @@ export default function TvDetailPage() {
                         type="button"
                         className="movie-detail__cast-member"
                         onClick={() => handleCastClick(member)}
-                        aria-label={`See titles with ${member.name}`}
+                        aria-label={`View details for ${member.name}`}
                       >
                         <div className="movie-detail__cast-photo-wrap">
                           <img
