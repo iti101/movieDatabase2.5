@@ -21,8 +21,8 @@ export const MOVIE_GENRES = [
   'Western',
 ];
 
-export function getAllGenres() {
-  return [...MOVIE_GENRES];
+export function getAllGenres(mediaPreference = 'movie') {
+  return getGenresForMediaPreference(mediaPreference);
 }
 
 /**
@@ -39,8 +39,8 @@ export function getGenresForMediaPreference(mediaPreference) {
   return [...MOVIE_GENRES];
 }
 
-export function pickRandomGenres(count = 5) {
-  const shuffled = [...MOVIE_GENRES];
+export function pickRandomGenres(count = 5, mediaPreference = 'movie') {
+  const shuffled = [...getGenresForMediaPreference(mediaPreference)];
 
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));

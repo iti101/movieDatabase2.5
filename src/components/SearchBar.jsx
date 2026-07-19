@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import BrowseBy from './BrowseBy';
 import PillButton from './PillButton';
 import './SearchBar.css';
@@ -20,21 +20,24 @@ function SearchIcon() {
 function SearchBar({
   placeholder = 'Search for a movie...',
   onSearch,
+  onChange,
   onBrowseSelect,
   browseSelectedId = null,
   defaultValue = '',
   value,
 }) {
-  const [query, setQuery] = useState(value ?? defaultValue);
-
-  useEffect(() => {
-    if (value !== undefined) {
-      setQuery(value);
-    }
-  }, [value]);
+  const isControlled = value !== undefined;
+  const [uncontrolledQuery, setUncontrolledQuery] = useState(defaultValue);
+  const query = isControlled ? value : uncontrolledQuery;
 
   function handleInputChange(event) {
-    setQuery(event.target.value);
+    const next = event.target.value;
+
+    if (!isControlled) {
+      setUncontrolledQuery(next);
+    }
+
+    onChange?.(next);
   }
 
   function handleSubmit(event) {
@@ -59,6 +62,9 @@ function SearchBar({
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
+          dir="ltr"
+          spellCheck={false}
+          autoComplete="off"
           aria-label="Search for a movie"
         />
 

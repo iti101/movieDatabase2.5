@@ -533,25 +533,30 @@ function filterPeopleByDepartment(people, department) {
 export async function searchByBrowseMode(
   query,
   browseOption,
-  { selectedGenre, personId } = {},
+  { selectedGenre, personId, mediaType = 'movie' } = {},
 ) {
   const mode = browseOption?.id ?? null;
   const trimmed = query.trim();
+  const isTv = mediaType === 'tv';
 
   if (mode === 'genre') {
     const genreLabel = selectedGenre || trimmed;
-    const genreId = resolveGenreId(genreLabel);
+    const genreId = resolveGenreId(genreLabel, mediaType);
 
     if (!genreId) {
       return [];
     }
 
-    return discoverMovies({ with_genres: genreId });
+    return isTv
+      ? discoverTv({ with_genres: genreId })
+      : discoverMovies({ with_genres: genreId });
   }
 
   // Filmography path (e.g. "All movies" from a person detail page).
   if (mode === 'actor' && personId) {
-    return discoverMovies({ with_cast: personId });
+    return isTv
+      ? discoverTv({ with_cast: personId })
+      : discoverMovies({ with_cast: personId });
   }
 
   if (!trimmed) {
@@ -579,14 +584,23 @@ export async function searchByBrowseMode(
         .map(Number)
         .sort((a, b) => a - b);
 
+      if (isTv) {
+        return discoverTv({
+          'first_air_date.gte': `${start}-01-01`,
+          'first_air_date.lte': `${end}-12-31`,
+        });
+      }
+
       return discoverMovies({
         'primary_release_date.gte': `${start}-01-01`,
         'primary_release_date.lte': `${end}-12-31`,
       });
     }
 
-    return discoverMovies({ primary_release_year: yearMatch[0] });
+    return isTv
+      ? discoverTv({ first_air_date_year: yearMatch[0] })
+      : discoverMovies({ primary_release_year: yearMatch[0] });
   }
 
-  return searchMovies(trimmed);
+  return isTv ? searchTv(trimmed) : searchMovies(trimmed);
 }

@@ -321,8 +321,70 @@ export async function getReviewForTitle(userId, tmdbId, mediaType = 'movie') {
   );
 }
 
-export async function getProfiles() {
-  return asArray(await noviFetch('/api/profiles'));
+export async function getProfiles({ auth = true } = {}) {
+  return asArray(await noviFetch('/api/profiles', { auth }));
+}
+
+const CLAIMED_DISPLAY_NAMES_KEY = 'novi.claimedDisplayNames';
+const SEED_DISPLAY_NAMES = ['admin', 'demo user'];
+
+function readClaimedDisplayNames() {
+  try {
+    const raw = localStorage.getItem(CLAIMED_DISPLAY_NAMES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getKnownDisplayNames() {
+  return new Set([...SEED_DISPLAY_NAMES, ...readClaimedDisplayNames()]);
+}
+
+export function rememberDisplayName(displayName) {
+  const normalized = String(displayName || '').trim().toLowerCase();
+  if (!normalized) {
+    return;
+  }
+  const existing = readClaimedDisplayNames();
+  if (existing.includes(normalized)) {
+    return;
+  }
+  localStorage.setItem(
+    CLAIMED_DISPLAY_NAMES_KEY,
+    JSON.stringify([...existing, normalized]),
+  );
+}
+
+export function cacheDisplayNamesFromProfiles(profiles) {
+  for (const profile of asArray(profiles)) {
+    rememberDisplayName(profile?.displayName);
+  }
+}
+
+export async function isDisplayNameTaken(displayName) {
+  const normalized = String(displayName || '').trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  if (getKnownDisplayNames().has(normalized)) {
+    return true;
+  }
+
+  try {
+    const token = getStoredToken();
+    const canUseAuth = Boolean(token && !isTokenExpired(token));
+    const profiles = await getProfiles({ auth: canUseAuth });
+    cacheDisplayNamesFromProfiles(profiles);
+    return profiles.some(
+      (profile) =>
+        String(profile?.displayName || '').trim().toLowerCase() === normalized,
+    );
+  } catch {
+    return getKnownDisplayNames().has(normalized);
+  }
 }
 
 export async function createReview(review) {
@@ -351,8 +413,10 @@ export async function deleteReview(id) {
 }
 
 export async function createProfile({ userId, displayName }) {
-  return noviFetch('/api/profiles', {
+  const profile = await noviFetch('/api/profiles', {
     method: 'POST',
     body: JSON.stringify({ userId, displayName }),
   });
+  rememberDisplayName(displayName);
+  return profile;
 }

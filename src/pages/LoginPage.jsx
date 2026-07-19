@@ -3,7 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
+import { createProfile } from '../services/noviApi';
 import './LoginPage.css';
+
+const PENDING_USERNAME_KEY = 'novi.pendingDisplayName';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -24,7 +27,22 @@ export default function LoginPage() {
     const password = String(formData.get('password') || '');
 
     try {
-      await login(email, password);
+      const user = await login(email, password);
+      const pendingUsername = sessionStorage.getItem(PENDING_USERNAME_KEY);
+
+      if (pendingUsername && user?.id != null) {
+        try {
+          await createProfile({
+            userId: user.id,
+            displayName: pendingUsername,
+          });
+        } catch {
+          // Account is usable even if profile creation fails; reviews fall back to a generic label.
+        } finally {
+          sessionStorage.removeItem(PENDING_USERNAME_KEY);
+        }
+      }
+
       navigate(redirect, { replace: true });
     } catch (err) {
       setError(

@@ -3,7 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
+import { isDisplayNameTaken } from '../services/noviApi';
 import './LoginPage.css';
+
+const PENDING_USERNAME_KEY = 'novi.pendingDisplayName';
 
 export default function SignupPage() {
   const { register } = useAuth();
@@ -11,17 +14,32 @@ export default function SignupPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/watchlist';
   const [error, setError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    setUsernameError('');
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
+    const username = String(formData.get('username') || '').trim();
     const email = String(formData.get('email') || '').trim();
     const password = String(formData.get('password') || '');
     const confirmPassword = String(formData.get('confirmPassword') || '');
+
+    if (username.length < 2) {
+      setUsernameError('Username must be at least 2 characters.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (username.length > 50) {
+      setUsernameError('Username must be 50 characters or fewer.');
+      setIsSubmitting(false);
+      return;
+    }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters.');
@@ -36,7 +54,16 @@ export default function SignupPage() {
     }
 
     try {
+      if (await isDisplayNameTaken(username)) {
+        setUsernameError(
+          'This username is already in use. Please try a different one.',
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       await register(email, password);
+      sessionStorage.setItem(PENDING_USERNAME_KEY, username);
       navigate(
         `/login?redirect=${encodeURIComponent(redirect)}&registered=1`,
         { replace: true },
@@ -84,6 +111,32 @@ export default function SignupPage() {
         </p>
 
         <form className="login-page__form" onSubmit={handleSubmit}>
+          <label className="login-page__field">
+            <span className="login-page__label">Username</span>
+            <input
+              className="login-page__input"
+              type="text"
+              name="username"
+              autoComplete="username"
+              placeholder="Choose a username"
+              minLength={2}
+              maxLength={50}
+              aria-invalid={Boolean(usernameError)}
+              aria-describedby={usernameError ? 'username-error' : undefined}
+              onChange={() => {
+                if (usernameError) {
+                  setUsernameError('');
+                }
+              }}
+              required
+            />
+            {usernameError ? (
+              <p id="username-error" className="login-page__error" role="alert">
+                {usernameError}
+              </p>
+            ) : null}
+          </label>
+
           <label className="login-page__field">
             <span className="login-page__label">Email</span>
             <input
