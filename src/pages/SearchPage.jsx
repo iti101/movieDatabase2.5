@@ -283,6 +283,27 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     setActiveQuery(query);
   }
 
+  function handleSearchTitlesInstead() {
+    const query = activeQuery || selectedGenre || inputValue;
+    setBrowseOption(null);
+    setSelectedGenre(null);
+    setGenreSuggestions([]);
+    setPersonId(null);
+    setSuggestion(null);
+    setErrorMessage('');
+
+    if (!query) {
+      setInputValue('');
+      setActiveQuery('');
+      setResults([]);
+      setStatus('idle');
+      return;
+    }
+
+    setInputValue(query);
+    setActiveQuery(query);
+  }
+
   function handleHelp() {
     if (onLetUsHelp) {
       onLetUsHelp();
