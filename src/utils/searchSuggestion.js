@@ -1,6 +1,6 @@
-import { searchMovies, searchPeople } from '../services/tmdb';
+import { searchMovies, searchPeople, searchTv } from '../services/tmdb';
 import { findClosestMatch, normalizeForCompare } from './fuzzyMatch';
-import { MOVIE_GENRES } from './genreSuggestions';
+import { getGenresForMediaPreference } from './genreSuggestions';
 
 const DEPARTMENT_BY_BROWSE_MODE = {
   actor: 'Acting',
@@ -26,9 +26,10 @@ function buildPrefixQueries(query) {
   return [...prefixes].filter((prefix) => prefix.length >= 3);
 }
 
-function findGenreSuggestion(query) {
+function findGenreSuggestion(query, mediaType = 'movie') {
+  const genres = getGenresForMediaPreference(mediaType);
   const normalizedQuery = normalizeForCompare(query);
-  const canonical = MOVIE_GENRES.find(
+  const canonical = genres.find(
     (genre) => normalizeForCompare(genre) === normalizedQuery,
   );
 
@@ -36,7 +37,7 @@ function findGenreSuggestion(query) {
     return canonical.toLowerCase() === query.trim().toLowerCase() ? null : canonical;
   }
 
-  return findClosestMatch(query, MOVIE_GENRES);
+  return findClosestMatch(query, genres);
 }
 
 async function findPersonSuggestion(query, department) {
@@ -65,13 +66,14 @@ async function findPersonSuggestion(query, department) {
   return findClosestMatch(trimmed, [...candidates]);
 }
 
-async function findTitleSuggestion(query) {
+async function findTitleSuggestion(query, mediaType = 'movie') {
   const titleCandidates = new Set();
   const prefixes = buildPrefixQueries(query.trim());
+  const searchTitles = mediaType === 'tv' ? searchTv : searchMovies;
 
   for (const prefix of prefixes) {
     try {
-      const results = await searchMovies(prefix);
+      const results = await searchTitles(prefix);
       results.forEach((item) => {
         if (item?.title) {
           titleCandidates.add(item.title);
@@ -91,7 +93,7 @@ async function findTitleSuggestion(query) {
  */
 export async function findSearchSuggestion(
   query,
-  { hasResults = false, browseMode = null } = {},
+  { hasResults = false, browseMode = null, mediaType = 'movie' } = {},
 ) {
   const trimmed = query.trim();
 
@@ -100,7 +102,7 @@ export async function findSearchSuggestion(
   }
 
   if (browseMode === 'genre') {
-    return findGenreSuggestion(trimmed);
+    return findGenreSuggestion(trimmed, mediaType);
   }
 
   if (browseMode === 'actor' || browseMode === 'director') {
@@ -111,12 +113,12 @@ export async function findSearchSuggestion(
     return null;
   }
 
-  const genreSuggestion = findGenreSuggestion(trimmed);
+  const genreSuggestion = findGenreSuggestion(trimmed, mediaType);
   if (genreSuggestion) {
     return genreSuggestion;
   }
 
-  return findTitleSuggestion(trimmed);
+  return findTitleSuggestion(trimmed, mediaType);
 }
 
 /**

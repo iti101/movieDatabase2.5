@@ -4,6 +4,7 @@ import PillButton from './PillButton';
 import { useAuth } from '../context/AuthContext';
 import {
   createReview,
+  cacheDisplayNamesFromProfiles,
   getProfiles,
   getReviewsForTitle,
   updateReview,
@@ -197,6 +198,8 @@ export default function TitleReviews({
         if (cancelled) {
           return;
         }
+
+        cacheDisplayNamesFromProfiles(profiles);
 
         const map = new Map();
         for (const profile of profiles) {

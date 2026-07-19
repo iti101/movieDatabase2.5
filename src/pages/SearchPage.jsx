@@ -6,7 +6,7 @@ import PillButton from '../components/PillButton';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
 import { searchByBrowseMode } from '../services/tmdb';
-import { getAllGenres, MOVIE_GENRES, pickRandomGenres } from '../utils/genreSuggestions';
+import { getAllGenres, getGenresForMediaPreference, pickRandomGenres } from '../utils/genreSuggestions';
 import { findSearchSuggestion, getEmptySearchGuidance } from '../utils/searchSuggestion';
 import './SearchPage.css';
 
@@ -36,6 +36,11 @@ function ChevronDownIcon() {
     </svg>
   );
 }
+
+const MEDIA_OPTIONS = [
+  { id: 'movie', label: 'Movies' },
+  { id: 'tv', label: 'Series' },
+];
 
 function getBrowsePlaceholder(label) {
   const term = label.toLowerCase();
@@ -70,6 +75,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
   const [browseOption, setBrowseOption] = useState(
     initialActor ? ACTOR_BROWSE_OPTION : null,
   );
+  const [mediaType, setMediaType] = useState('movie');
   const [genreSuggestions, setGenreSuggestions] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [inputValue, setInputValue] = useState(initialActor?.name ?? '');
@@ -104,19 +110,27 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
         const data = await searchByBrowseMode(activeQuery || selectedGenre, browseOption, {
           selectedGenre,
           personId: browseMode === 'actor' ? personId : null,
+          mediaType,
         });
 
         if (cancelled) {
           return;
         }
 
-        setResults(data);
+        // Keep people results for actor/director browse; otherwise enforce media type.
+        const filtered =
+          browseMode === 'actor' || browseMode === 'director'
+            ? data
+            : data.filter((item) => item.mediaType === mediaType);
+
+        setResults(filtered);
         setStatus('success');
 
-        if (data.length === 0 && activeQuery) {
+        if (filtered.length === 0 && activeQuery) {
           const closest = await findSearchSuggestion(activeQuery, {
             hasResults: false,
             browseMode,
+            mediaType,
           });
           if (!cancelled) {
             setSuggestion(closest);
@@ -139,7 +153,35 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     return () => {
       cancelled = true;
     };
-  }, [activeQuery, browseOption, browseMode, selectedGenre, personId]);
+  }, [activeQuery, browseOption, browseMode, selectedGenre, personId, mediaType]);
+
+  useEffect(() => {
+    if (browseMode !== 'genre') {
+      return;
+    }
+
+    const availableGenres = getGenresForMediaPreference(mediaType);
+
+    if (selectedGenre && !availableGenres.includes(selectedGenre)) {
+      setSelectedGenre(null);
+      setActiveQuery('');
+      setInputValue('');
+      setResults([]);
+      setSuggestion(null);
+      setStatus('idle');
+      setGenreSuggestions(pickRandomGenres(8, mediaType));
+      return;
+    }
+
+    if (!selectedGenre && genreSuggestions.length > 0) {
+      const showingAll = genreSuggestions.length >= availableGenres.length;
+      setGenreSuggestions(
+        showingAll ? getAllGenres(mediaType) : pickRandomGenres(8, mediaType),
+      );
+    }
+    // Only refresh genre chips when the Movies/Series toggle changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [mediaType]);
 
   function handleSearch(query) {
     setGenreSuggestions([]);
@@ -201,7 +243,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     setErrorMessage('');
 
     if (option.id === 'genre') {
-      setGenreSuggestions(pickRandomGenres(8));
+      setGenreSuggestions(pickRandomGenres(8, mediaType));
     } else {
       setGenreSuggestions([]);
     }
@@ -217,7 +259,7 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
 
   function handleAllGenres() {
     setSelectedGenre(null);
-    setGenreSuggestions(getAllGenres());
+    setGenreSuggestions(getAllGenres(mediaType));
   }
 
   function handleSearchTitlesInstead() {
@@ -254,7 +296,9 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     ? getBrowsePlaceholder(selectedGenre)
     : browseOption
       ? getBrowsePlaceholder(browseOption.label)
-      : 'Search for a movie...';
+      : mediaType === 'movie'
+        ? 'Search for a movie...'
+        : 'Search for a series...';
 
   const contextLabel = getSearchContextLabel(browseOption);
   const emptyGuidance = getEmptySearchGuidance(browseMode);
@@ -271,10 +315,32 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
     <div className={pageClassName}>
       <div className="search-page__content">
         <div className="search-page__top">
-          <h2 className="search-page__title">Search</h2>
+          <h2 className="search-page__title">
+            <span>Search</span>
+            <span className="search-page__media-toggle" role="group" aria-label="Media type">
+              {MEDIA_OPTIONS.map((option) => {
+                let className = 'search-page__media-btn';
+                if (mediaType === option.id) {
+                  className += ' search-page__media-btn--active';
+                }
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={className}
+                    aria-pressed={mediaType === option.id}
+                    onClick={() => setMediaType(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </span>
+          </h2>
           <div className="search-page__search-field">
             <SearchBar
               value={inputValue}
+              onChange={setInputValue}
               onSearch={handleSearch}
               onBrowseSelect={handleBrowse}
               browseSelectedId={browseOption?.id ?? null}
@@ -294,7 +360,9 @@ export default function SearchPage({ embedded = false, onLetUsHelp }) {
                   suggestions={genreSuggestions}
                   onSelect={handleGenreSelect}
                   onAllGenres={handleAllGenres}
-                  showAllButton={genreSuggestions.length < MOVIE_GENRES.length}
+                  showAllButton={
+                    genreSuggestions.length < getGenresForMediaPreference(mediaType).length
+                  }
                 />
               ) : null}
             </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
 import { createProfile } from '../services/noviApi';
@@ -104,9 +105,7 @@ export default function LoginPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="current-password"
               placeholder="Enter your password"

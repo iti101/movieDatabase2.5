@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
+import { isDisplayNameTaken } from '../services/noviApi';
 import './LoginPage.css';
 
 const PENDING_USERNAME_KEY = 'novi.pendingDisplayName';
@@ -51,6 +53,7 @@ export default function SignupPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/watchlist';
   const [error, setError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,6 +64,7 @@ export default function SignupPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    setUsernameError('');
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -70,13 +74,13 @@ export default function SignupPage() {
     const confirmPassword = String(formData.get('confirmPassword') || '');
 
     if (username.length < 2) {
-      setError('Username must be at least 2 characters.');
+      setUsernameError('Username must be at least 2 characters.');
       setIsSubmitting(false);
       return;
     }
 
     if (username.length > 50) {
-      setError('Username must be 50 characters or fewer.');
+      setUsernameError('Username must be 50 characters or fewer.');
       setIsSubmitting(false);
       return;
     }
@@ -95,6 +99,14 @@ export default function SignupPage() {
     }
 
     try {
+      if (await isDisplayNameTaken(username)) {
+        setUsernameError(
+          'This username is already in use. Please try a different one.',
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       await register(email, nextPassword);
       sessionStorage.setItem(PENDING_USERNAME_KEY, username);
       navigate(
@@ -154,8 +166,20 @@ export default function SignupPage() {
               placeholder="Choose a username"
               minLength={2}
               maxLength={50}
+              aria-invalid={Boolean(usernameError)}
+              aria-describedby={usernameError ? 'username-error' : undefined}
+              onChange={() => {
+                if (usernameError) {
+                  setUsernameError('');
+                }
+              }}
               required
             />
+            {usernameError ? (
+              <p id="username-error" className="login-page__error" role="alert">
+                {usernameError}
+              </p>
+            ) : null}
           </label>
 
           <label className="login-page__field">
@@ -172,9 +196,7 @@ export default function SignupPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="new-password"
               placeholder="Create a strong password"
@@ -216,9 +238,7 @@ export default function SignupPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Confirm password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="confirmPassword"
               autoComplete="new-password"
               placeholder="Repeat your password"

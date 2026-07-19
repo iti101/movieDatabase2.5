@@ -36,6 +36,9 @@
   font-size: 1rem;
   color: var(--text);
   outline: none;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
 }
 
 .search-bar__input::placeholder {
