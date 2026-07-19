@@ -78,6 +78,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  transform: translateY(150px);
   transition:
     transform 0.45s ease,
     max-width 0.45s ease;
@@ -85,17 +86,71 @@
 
 .search-page__title {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1em;
   font-size: clamp(2.25rem, 5vw, 3.25rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text);
   text-align: center;
+}
+
+.search-page__media-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.search-page__media-btn {
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--page-bg-color);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.25;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.search-page__media-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.search-page__media-btn:focus-visible {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 2px;
+}
+
+.search-page__media-btn--active {
+  border-color: var(--btn-bg);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.search-page__media-btn--active:hover {
+  border-color: var(--btn-bg-hover);
+  background: var(--btn-bg-hover);
+  color: var(--btn-text);
 }
 
 .search-page--active .search-page__top {
   max-width: 42rem;
-  transform: translateY(0);
+  /* Drop transform entirely while results show — translateY(0) still breaks input carets. */
+  transform: none;
   justify-self: center;
 }
 
@@ -147,7 +202,7 @@
   gap: 0.75rem;
   width: 100%;
   max-width: 42rem;
-  margin-top: clamp(7.5rem, 20vh, 11rem);
+  margin-top: calc(clamp(7.5rem, 20vh, 11rem) + 200px);
   text-align: center;
   transition:
     margin-top 0.45s ease,
@@ -172,7 +227,7 @@
   font-size: 0.9375rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .search-page__help-action {
@@ -189,13 +244,13 @@
   padding: 0.25rem;
   border: none;
   background: none;
-  color: #94a3b8;
+  color: var(--text-faint);
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
 .search-page__help-arrow:hover {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -247,7 +302,7 @@
   }
 
   .search-page__help {
-    margin-top: clamp(5rem, 16vh, 8rem);
+    margin-top: calc(clamp(5rem, 16vh, 8rem) + 200px);
   }
 }
 

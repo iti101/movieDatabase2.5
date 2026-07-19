@@ -13,7 +13,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.45;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .did-you-mean__suggestion {
@@ -23,7 +23,7 @@
   font-family: inherit;
   font-size: inherit;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 0.15em;
@@ -31,11 +31,11 @@
 }
 
 .did-you-mean__suggestion:hover {
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .did-you-mean__suggestion:focus-visible {
-  outline: 2px solid #94a3b8;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 2px;
 }

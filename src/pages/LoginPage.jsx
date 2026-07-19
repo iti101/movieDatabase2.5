@@ -1,18 +1,56 @@
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput';
 import PillButton from '../components/PillButton';
 import { useAuth } from '../context/AuthContext';
+import { createProfile } from '../services/noviApi';
 import './LoginPage.css';
+
+const PENDING_USERNAME_KEY = 'novi.pendingDisplayName';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/watchlist';
+  const justRegistered = searchParams.get('registered') === '1';
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    login();
-    navigate(redirect, { replace: true });
+    setError('');
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
+
+    try {
+      const user = await login(email, password);
+      const pendingUsername = sessionStorage.getItem(PENDING_USERNAME_KEY);
+
+      if (pendingUsername && user?.id != null) {
+        try {
+          await createProfile({
+            userId: user.id,
+            displayName: pendingUsername,
+          });
+        } catch {
+          // Account is usable even if profile creation fails; reviews fall back to a generic label.
+        } finally {
+          sessionStorage.removeItem(PENDING_USERNAME_KEY);
+        }
+      }
+
+      navigate(redirect, { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Could not sign in. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleClose() {
@@ -43,8 +81,14 @@ export default function LoginPage() {
         </button>
         <h1 className="login-page__heading">Sign in</h1>
         <p className="login-page__text">
-          Sign in to access your watchlist and preferences.
+          Sign in to access your watchlists and reviews.
         </p>
+
+        {justRegistered ? (
+          <p className="login-page__success" role="status">
+            Your account has been created. Sign in to continue.
+          </p>
+        ) : null}
 
         <form className="login-page__form" onSubmit={handleSubmit}>
           <label className="login-page__field">
@@ -61,9 +105,7 @@ export default function LoginPage() {
 
           <label className="login-page__field">
             <span className="login-page__label">Password</span>
-            <input
-              className="login-page__input"
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="current-password"
               placeholder="Enter your password"
@@ -71,14 +113,23 @@ export default function LoginPage() {
             />
           </label>
 
-          <PillButton type="submit" className="login-page__submit">
-            Sign in
+          {error ? (
+            <p className="login-page__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <PillButton type="submit" className="login-page__submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </PillButton>
         </form>
 
         <p className="login-page__signup">
           Not a member yet?{' '}
-          <Link to="/signup" className="login-page__signup-link">
+          <Link
+            to={`/signup?redirect=${encodeURIComponent(redirect)}`}
+            className="login-page__signup-link"
+          >
             Create new account
           </Link>
         </p>

@@ -72,6 +72,7 @@ export default function SearchResults({
                   title={item.title}
                   year={item.year}
                   posterUrl={item.posterUrl}
+                  mediaType={item.mediaType}
                 />
               </li>
             ))}

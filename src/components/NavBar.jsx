@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMenuUi } from '../context/MenuUiContext';
+import ThemeToggle from './ThemeToggle';
 import './NavBar.css';
 
 const MENU_LINKS = [
@@ -34,7 +36,7 @@ function AccountIcon() {
   );
 }
 
-function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
+function AccountMenu({ onClose, onSignIn, onSignOut, onWatchlists, isLoggedIn }) {
   return (
     <>
       <button
@@ -43,19 +45,39 @@ function AccountMenu({ onClose, onSignIn, onSignOut, isLoggedIn }) {
         aria-label="Close account menu"
         onClick={onClose}
       />
-      <div className="navbar__account-panel" role="dialog" aria-label="Account">
-        <p className="navbar__account-heading">Your account</p>
+      <div
+        className={
+          isLoggedIn
+            ? 'navbar__account-panel navbar__account-panel--menu'
+            : 'navbar__account-panel'
+        }
+        role={isLoggedIn ? 'menu' : 'dialog'}
+        aria-label="Account"
+      >
         {isLoggedIn ? (
-          <>
-            <p className="navbar__account-text">You are signed in.</p>
-            <button type="button" className="navbar__account-signin" onClick={onSignOut}>
-              Log out
+          <div className="navbar__account-menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="navbar__account-menu-item"
+              onClick={onWatchlists}
+            >
+              My Watchlists
             </button>
-          </>
+            <button
+              type="button"
+              role="menuitem"
+              className="navbar__account-menu-item"
+              onClick={onSignOut}
+            >
+              Sign out
+            </button>
+          </div>
         ) : (
           <>
+            <p className="navbar__account-heading">Your account</p>
             <p className="navbar__account-text">
-              Sign in to access your watchlist and preferences.
+              Sign in to access your watchlists and reviews.
             </p>
             <button type="button" className="navbar__account-signin" onClick={onSignIn}>
               Sign in
@@ -143,12 +165,40 @@ function FullscreenMenu({ isOpen, onLinkClick, onAuthClick, onSearchClick, onHom
   );
 }
 
+const DETAIL_MENU_PEEK_QUERY = '(max-width: 640px)';
+
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { menuOpen, setMenuOpen } = useMenuUi();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [narrowViewport, setNarrowViewport] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia(DETAIL_MENU_PEEK_QUERY).matches
+      : false,
+  );
   const authLabel = isLoggedIn ? 'Log out' : 'Log in';
+  const isDetailPage =
+    location.pathname.startsWith('/movie/') ||
+    location.pathname.startsWith('/tv/') ||
+    location.pathname.startsWith('/person/');
+  // On narrow detail pages the Back link needs the hamburger slot, so tuck
+  // the regular button and show the small peek control instead.
+  const menuTucked = isDetailPage && narrowViewport && !menuOpen;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DETAIL_MENU_PEEK_QUERY);
+    function handleChange(event) {
+      setNarrowViewport(event.matches);
+    }
+
+    setNarrowViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   // Stop the page from scrolling while the fullscreen menu is open
   useEffect(() => {
@@ -162,6 +212,11 @@ export default function Navbar() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  // Close the menu on route changes so page controls can render again
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname, setMenuOpen]);
 
   function toggleMenu() {
     if (menuOpen) {
@@ -192,6 +247,11 @@ export default function Navbar() {
   function handleSignIn() {
     setAccountOpen(false);
     navigate('/login');
+  }
+
+  function handleWatchlists() {
+    setAccountOpen(false);
+    navigate('/watchlist');
   }
 
   function handleSignOut() {
@@ -226,6 +286,9 @@ export default function Navbar() {
   if (menuOpen) {
     menuButtonClass += ' navbar__menu-btn--open';
   }
+  if (menuTucked) {
+    menuButtonClass += ' navbar__menu-btn--tucked';
+  }
 
   return (
     <>
@@ -237,32 +300,65 @@ export default function Navbar() {
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="navbar-fullscreen-menu"
+            aria-hidden={menuTucked}
+            tabIndex={menuTucked ? -1 : undefined}
             onClick={toggleMenu}
           >
             <MenuIcon />
           </button>
 
-          <div className="navbar__account">
+          {isDetailPage && narrowViewport ? (
             <button
               type="button"
-              className="navbar__account-btn"
-              aria-label="Account"
-              aria-expanded={accountOpen}
-              aria-haspopup="true"
-              onClick={toggleAccount}
+              className={
+                menuTucked
+                  ? 'navbar__menu-peek'
+                  : 'navbar__menu-peek navbar__menu-peek--hidden'
+              }
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="navbar-fullscreen-menu"
+              tabIndex={menuTucked ? undefined : -1}
+              onClick={toggleMenu}
             >
-              <AccountIcon />
+              <span className="navbar__menu-peek-icon" aria-hidden="true">
+                <span className="navbar__menu-peek-line" />
+                <span className="navbar__menu-peek-line" />
+                <span className="navbar__menu-peek-line" />
+              </span>
             </button>
+          ) : null}
 
-            {accountOpen && (
-              <AccountMenu
-                onClose={closeAccount}
-                onSignIn={handleSignIn}
-                onSignOut={handleSignOut}
-                isLoggedIn={isLoggedIn}
-              />
-            )}
-          </div>
+          {!menuOpen ? (
+            <div className="navbar__actions">
+              <ThemeToggle />
+
+              <div className="navbar__account">
+                <button
+                  type="button"
+                  className="navbar__account-btn"
+                  aria-label="Account"
+                  aria-expanded={accountOpen}
+                  aria-haspopup="true"
+                  onClick={toggleAccount}
+                >
+                  <AccountIcon />
+                </button>
+
+                {accountOpen && (
+                  <AccountMenu
+                    onClose={closeAccount}
+                    onSignIn={handleSignIn}
+                    onSignOut={handleSignOut}
+                    onWatchlists={handleWatchlists}
+                    isLoggedIn={isLoggedIn}
+                  />
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="navbar__actions" aria-hidden="true" />
+          )}
         </div>
       </header>
 

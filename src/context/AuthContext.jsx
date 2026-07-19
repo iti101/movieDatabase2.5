@@ -1,33 +1,58 @@
 import { createContext, useContext, useState } from 'react';
+import {
+  clearAuthStorage,
+  getStoredToken,
+  getStoredUser,
+  isTokenExpired,
+  login as apiLogin,
+  register as apiRegister,
+} from '../services/noviApi';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = 'loggedIn';
+function readInitialUser() {
+  const token = getStoredToken();
+  const storedUser = getStoredUser();
 
-function readLoggedIn() {
-  return sessionStorage.getItem(STORAGE_KEY) === 'true';
+  if (!token || isTokenExpired(token) || !storedUser) {
+    clearAuthStorage();
+    return null;
+  }
+
+  return storedUser;
 }
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(readLoggedIn);
+  const [user, setUser] = useState(readInitialUser);
 
-  function login() {
-    sessionStorage.setItem(STORAGE_KEY, 'true');
-    setIsLoggedIn(true);
+  async function login(email, password) {
+    const { user: nextUser } = await apiLogin(email, password);
+    setUser(nextUser);
+    return nextUser;
+  }
+
+  async function register(email, password) {
+    return apiRegister(email, password);
   }
 
   function logout() {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setIsLoggedIn(false);
+    clearAuthStorage();
+    setUser(null);
   }
 
-  return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    isLoggedIn: Boolean(user),
+    authStatus: 'ready',
+    login,
+    register,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook paired with provider
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

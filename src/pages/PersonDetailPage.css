@@ -1,0 +1,45 @@
+.person-detail__section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.person-detail__section-header .movie-detail__section-title {
+  margin-bottom: 0;
+}
+
+.person-detail__all-movies {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.person-detail__all-movies:hover {
+  color: var(--text-secondary);
+}
+
+.person-detail__all-movies:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.person-detail__known-for {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

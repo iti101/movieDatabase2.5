@@ -6,7 +6,7 @@ import WatchProviders from '../components/WatchProviders';
 import { useAuth } from '../context/AuthContext';
 import { useMenuUi } from '../context/MenuUiContext';
 import { isTitleOnWatchlist } from '../services/noviApi';
-import { getMovieDetails } from '../services/tmdb';
+import { getTvDetails } from '../services/tmdb';
 import './MovieDetailPage.css';
 
 function formatRating(rating) {
@@ -16,12 +16,12 @@ function formatRating(rating) {
   return rating.toFixed(1);
 }
 
-export default function MovieDetailPage() {
+export default function TvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
   const { menuOpen } = useMenuUi();
-  const [movie, setMovie] = useState(null);
+  const [show, setShow] = useState(null);
   const [status, setStatus] = useState('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [onWatchlist, setOnWatchlist] = useState(false);
@@ -37,22 +37,22 @@ export default function MovieDetailPage() {
   useEffect(() => {
     let cancelled = false;
 
-    async function loadMovie() {
+    async function loadShow() {
       setStatus('loading');
       setErrorMessage('');
-      setMovie(null);
+      setShow(null);
 
       try {
-        const details = await getMovieDetails(id);
+        const details = await getTvDetails(id);
         if (cancelled) {
           return;
         }
 
-        setMovie(details);
+        setShow(details);
         setStatus('success');
 
         if (isLoggedIn && user?.id) {
-          const saved = await isTitleOnWatchlist(user.id, details.id, 'movie');
+          const saved = await isTitleOnWatchlist(user.id, details.id, 'tv');
           if (!cancelled) {
             setOnWatchlist(saved);
           }
@@ -71,17 +71,17 @@ export default function MovieDetailPage() {
       }
     }
 
-    loadMovie();
+    loadShow();
 
     return () => {
       cancelled = true;
     };
   }, [id, isLoggedIn, user?.id]);
 
-  const displayTitle = movie
-    ? movie.year
-      ? `${movie.title} (${movie.year})`
-      : movie.title
+  const displayTitle = show
+    ? show.year
+      ? `${show.title} (${show.year})`
+      : show.title
     : '';
 
   return (
@@ -90,8 +90,8 @@ export default function MovieDetailPage() {
         {!menuOpen ? (
           <Link
             className="movie-detail__back"
-            to={{ pathname: '/', hash: '#search' }}
-            state={{ scrollTo: 'search' }}
+            to={{ pathname: '/', hash: '#suggest' }}
+            state={{ scrollTo: 'suggest' }}
           >
             <svg
               className="movie-detail__back-icon"
@@ -115,7 +115,7 @@ export default function MovieDetailPage() {
 
         {status === 'loading' ? (
           <p className="movie-detail__message" aria-live="polite">
-            Loading movie details…
+            Loading TV show details…
           </p>
         ) : null}
 
@@ -124,36 +124,36 @@ export default function MovieDetailPage() {
             className="movie-detail__message movie-detail__message--error"
             role="alert"
           >
-            {errorMessage || 'Could not load this movie.'}
+            {errorMessage || 'Could not load this TV show.'}
           </p>
         ) : null}
 
-        {status === 'success' && movie ? (
+        {status === 'success' && show ? (
           <article className="movie-detail__content">
             <div className="movie-detail__hero">
               <div className="movie-detail__poster-wrap">
                 <img
                   className="movie-detail__poster"
-                  src={movie.posterUrl}
+                  src={show.posterUrl}
                   alt={displayTitle}
                 />
               </div>
 
               <div className="movie-detail__header">
-                <h1 className="movie-detail__title">{movie.title}</h1>
+                <h1 className="movie-detail__title">{show.title}</h1>
 
                 <dl className="movie-detail__meta">
-                  {movie.year ? (
+                  {show.year ? (
                     <div className="movie-detail__meta-item">
-                      <dt>Year</dt>
-                      <dd>{movie.year}</dd>
+                      <dt>First aired</dt>
+                      <dd>{show.year}</dd>
                     </div>
                   ) : null}
 
-                  {movie.genres.length > 0 ? (
+                  {show.genres.length > 0 ? (
                     <div className="movie-detail__meta-item">
                       <dt>Genre</dt>
-                      <dd>{movie.genres.join(', ')}</dd>
+                      <dd>{show.genres.join(', ')}</dd>
                     </div>
                   ) : null}
 
@@ -161,31 +161,31 @@ export default function MovieDetailPage() {
                     <dt>User rating</dt>
                     <dd>
                       <span className="movie-detail__rating">
-                        {formatRating(movie.rating)}
+                        {formatRating(show.rating)}
                       </span>
                       <span className="movie-detail__rating-scale"> / 10</span>
-                      {movie.voteCount > 0 ? (
+                      {show.voteCount > 0 ? (
                         <span className="movie-detail__vote-count">
-                          ({movie.voteCount.toLocaleString()} votes)
+                          ({show.voteCount.toLocaleString()} votes)
                         </span>
                       ) : null}
                     </dd>
                   </div>
 
-                  {movie.director ? (
+                  {show.creators ? (
                     <div className="movie-detail__meta-item">
-                      <dt>Director</dt>
-                      <dd>{movie.director}</dd>
+                      <dt>Created by</dt>
+                      <dd>{show.creators}</dd>
                     </div>
                   ) : null}
 
-                  {movie.trailerUrl ? (
+                  {show.trailerUrl ? (
                     <div className="movie-detail__meta-item">
                       <dt>Trailer</dt>
                       <dd>
                         <a
                           className="movie-detail__trailer-link"
-                          href={movie.trailerUrl}
+                          href={show.trailerUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -198,16 +198,16 @@ export default function MovieDetailPage() {
 
                 <WatchlistSaveButton
                   title={{
-                    id: movie.id,
-                    title: movie.title,
-                    year: movie.year,
-                    posterUrl: movie.posterUrl,
-                    mediaType: 'movie',
+                    id: show.id,
+                    title: show.title,
+                    year: show.year,
+                    posterUrl: show.posterUrl,
+                    mediaType: 'tv',
                   }}
                   onWatchlist={onWatchlist}
                   onWatchlistChange={handleWatchlistChange}
                   onError={setErrorMessage}
-                  loginRedirect={`/movie/${movie.id}`}
+                  loginRedirect={`/tv/${show.id}`}
                 />
               </div>
             </div>
@@ -217,26 +217,26 @@ export default function MovieDetailPage() {
                 Storyline
               </h2>
               <p className="movie-detail__synopsis">
-                {movie.overview || 'No synopsis available for this movie.'}
+                {show.overview || 'No synopsis available for this show.'}
               </p>
             </section>
 
-            <WatchProviders watchProviders={movie.watchProviders} />
+            <WatchProviders watchProviders={show.watchProviders} />
 
             <TitleReviews
-              tmdbId={movie.id}
-              mediaType="movie"
-              title={movie.title}
-              loginRedirect={`/movie/${movie.id}`}
+              tmdbId={show.id}
+              mediaType="tv"
+              title={show.title}
+              loginRedirect={`/tv/${show.id}`}
             />
 
             <section className="movie-detail__section" aria-labelledby="cast-heading">
               <h2 id="cast-heading" className="movie-detail__section-title">
                 Cast
               </h2>
-              {movie.cast.length > 0 ? (
+              {show.cast.length > 0 ? (
                 <ul className="movie-detail__cast">
-                  {movie.cast.map((member) => (
+                  {show.cast.map((member) => (
                     <li key={member.id}>
                       <button
                         type="button"

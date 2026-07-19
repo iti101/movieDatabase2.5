@@ -13,8 +13,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--surface-chip);
+  color: var(--text-muted);
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -23,14 +23,14 @@
 }
 
 .browse-by__trigger:hover {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border);
+  color: var(--text-secondary);
   transform: scale(1.06);
 }
 
 .browse-by__trigger[aria-expanded='true'] {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border);
+  color: var(--text-secondary);
 }
 
 .browse-by__chevron {
@@ -47,10 +47,10 @@
   z-index: 10;
   min-width: 11rem;
   padding: 0.375rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.625rem;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   animation: browse-by-menu-in 0.2s ease;
 }
 
@@ -58,8 +58,8 @@
   margin: 0 0 0.375rem;
   padding: 0.75rem 1.25rem;
   border-radius: 9999px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1;
@@ -79,7 +79,7 @@
   border: none;
   border-radius: 0.375rem;
   background: transparent;
-  color: #0f172a;
+  color: var(--text);
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -91,23 +91,35 @@
 }
 
 .browse-by__option:hover {
-  background: #f1f5f9;
-  color: #020617;
+  background: var(--surface-chip);
+  color: var(--text);
 }
 
 .browse-by__option--selected {
-  background: #e2e8f0;
-  color: #020617;
+  background: var(--border);
+  color: var(--text);
 }
 
 .browse-by__trigger--active {
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--btn-bg);
+  color: var(--btn-text);
 }
 
 .browse-by__trigger--active:hover {
-  background: #1e293b;
-  color: #ffffff;
+  background: var(--btn-bg-hover);
+  color: var(--btn-text);
+}
+
+@keyframes browse-by-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes browse-by-menu-in {
