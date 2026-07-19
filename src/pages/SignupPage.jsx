@@ -8,6 +8,45 @@ import './LoginPage.css';
 
 const PENDING_USERNAME_KEY = 'novi.pendingDisplayName';
 
+const SPECIAL_CHAR_PATTERN = /[^A-Za-z0-9]/;
+
+function getPasswordChecks(password) {
+  return [
+    {
+      id: 'length',
+      label: 'At least 8 characters',
+      met: password.length >= 8,
+      missing: 'at least 8 characters',
+    },
+    {
+      id: 'number',
+      label: 'At least 1 number',
+      met: /\d/.test(password),
+      missing: 'at least 1 number',
+    },
+    {
+      id: 'special',
+      label: 'At least 1 special character',
+      met: SPECIAL_CHAR_PATTERN.test(password),
+      missing: 'at least 1 special character',
+    },
+  ];
+}
+
+function formatPasswordFeedback(checks) {
+  const missing = checks.filter((check) => !check.met).map((check) => check.missing);
+  if (missing.length === 0) {
+    return '';
+  }
+  if (missing.length === 1) {
+    return `Your password still needs ${missing[0]}.`;
+  }
+  if (missing.length === 2) {
+    return `Your password still needs ${missing[0]} and ${missing[1]}.`;
+  }
+  return `Your password still needs ${missing.slice(0, -1).join(', ')}, and ${missing[missing.length - 1]}.`;
+}
+
 export default function SignupPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -15,7 +54,12 @@ export default function SignupPage() {
   const redirect = searchParams.get('redirect') || '/watchlist';
   const [error, setError] = useState('');
   const [usernameError, setUsernameError] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const passwordChecks = getPasswordChecks(password);
+  const passwordFeedback = formatPasswordFeedback(passwordChecks);
+  const passwordIsValid = passwordChecks.every((check) => check.met);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -26,7 +70,7 @@ export default function SignupPage() {
     const formData = new FormData(event.currentTarget);
     const username = String(formData.get('username') || '').trim();
     const email = String(formData.get('email') || '').trim();
-    const password = String(formData.get('password') || '');
+    const nextPassword = String(formData.get('password') || '');
     const confirmPassword = String(formData.get('confirmPassword') || '');
 
     if (username.length < 2) {
@@ -41,13 +85,14 @@ export default function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    const submitChecks = getPasswordChecks(nextPassword);
+    if (!submitChecks.every((check) => check.met)) {
+      setError(formatPasswordFeedback(submitChecks));
       setIsSubmitting(false);
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (nextPassword !== confirmPassword) {
       setError('Passwords do not match.');
       setIsSubmitting(false);
       return;
@@ -62,7 +107,7 @@ export default function SignupPage() {
         return;
       }
 
-      await register(email, password);
+      await register(email, nextPassword);
       sessionStorage.setItem(PENDING_USERNAME_KEY, username);
       navigate(
         `/login?redirect=${encodeURIComponent(redirect)}&registered=1`,
@@ -154,10 +199,41 @@ export default function SignupPage() {
             <PasswordInput
               name="password"
               autoComplete="new-password"
-              placeholder="At least 6 characters"
-              minLength={6}
+              placeholder="Create a strong password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              minLength={8}
+              aria-describedby="password-requirements password-feedback"
+              aria-invalid={password.length > 0 && !passwordIsValid}
               required
             />
+            <ul
+              id="password-requirements"
+              className="login-page__password-rules"
+              aria-label="Password requirements"
+            >
+              {passwordChecks.map((check) => (
+                <li
+                  key={check.id}
+                  className={
+                    check.met
+                      ? 'login-page__password-rule login-page__password-rule--met'
+                      : 'login-page__password-rule'
+                  }
+                >
+                  {check.label}
+                </li>
+              ))}
+            </ul>
+            {password.length > 0 && passwordFeedback ? (
+              <p id="password-feedback" className="login-page__hint" role="status">
+                {passwordFeedback}
+              </p>
+            ) : (
+              <p id="password-feedback" className="login-page__hint">
+                Use at least 8 characters, including one number and one special character.
+              </p>
+            )}
           </label>
 
           <label className="login-page__field">
@@ -166,7 +242,7 @@ export default function SignupPage() {
               name="confirmPassword"
               autoComplete="new-password"
               placeholder="Repeat your password"
-              minLength={6}
+              minLength={8}
               required
             />
           </label>
